@@ -1311,6 +1311,10 @@
                     <input type="file" id="formFile" accept="image/*" />
                 </div>
                 <div class="form-row">
+                    <label>图片链接（可选，如果上传了文件则忽略此链接）</label>
+                    <input type="text" id="formImageUrl" placeholder="https://res.cloudinary.com/..." />
+                </div>
+                <div class="form-row">
                     <label>标题</label>
                     <input type="text" id="formTitle" placeholder="输入照片标题" />
                 </div>
@@ -1372,10 +1376,12 @@
 
     <script>
         // ================================================================
-        //  🔑 云端配置（RestDB）
+        //  🔑 云端配置（RestDB + Cloudinary）
         // ================================================================
         const API_KEY = 'a6bd49885ff7aa20699af87d7b38c591bb1ef';
         const DATABASE_URL = 'https://kkphoto-c6a6.restdb.io/rest/photos';
+        const CLOUD_NAME = 'e33jixhq';
+        const UPLOAD_PRESET = 'my_website';
         // ================================================================
 
         // ================================================================
@@ -1718,7 +1724,7 @@
         }
 
         // ================================================================
-        //  云端同步函数
+        //  云端同步函数（RestDB）
         // ================================================================
         async function syncToCloud() {
             if (!syncStatus) return;
@@ -1893,6 +1899,33 @@
         }
 
         // ================================================================
+        //  Cloudinary 上传函数
+        // ================================================================
+        function uploadToCloudinary(file) {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', UPLOAD_PRESET);
+                // 可选：指定文件夹
+                // formData.append('folder', 'kk_photos');
+
+                fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.secure_url) {
+                        resolve(data.secure_url);
+                    } else {
+                        reject(new Error('Cloudinary 返回错误：' + JSON.stringify(data)));
+                    }
+                })
+                .catch(err => reject(err));
+            });
+        }
+
+        // ================================================================
         //  核心功能（照片、国家、城市操作）
         // ================================================================
         let currentFilter = 'all';
@@ -1924,6 +1957,7 @@
         const cityListAdmin = document.getElementById('cityListAdmin');
         const editForm = document.getElementById('editForm');
         const formFile = document.getElementById('formFile');
+        const formImageUrl = document.getElementById('formImageUrl');
         const formTitle = document.getElementById('formTitle');
         const formCountry = document.getElementById('formCountry');
         const formCity = document.getElementById('formCity');
@@ -2249,30 +2283,29 @@
         }
 
         // ---- 照片增删改 ----
-        function addPhoto(title, country, city, imageData) {
+        function addPhoto(title, country, city, imageUrl) {
             const newPhoto = {
                 id: nextId(photos),
                 title: title.trim(),
                 country: country.trim(),
                 city: city.trim(),
-                image: imageData
+                image: imageUrl  // 直接存 URL
             };
             photos.push(newPhoto);
             savePhotos(photos);
             syncCategories();
             refreshAll();
-            // 异步同步到云端
             syncToCloud();
         }
 
-        function updatePhoto(id, title, country, city, imageData) {
+        function updatePhoto(id, title, country, city, imageUrl) {
             const idx = photos.findIndex(p => p.id === id);
             if (idx === -1) return;
             const updated = { ...photos[idx] };
             if (title) updated.title = title.trim();
             if (country) updated.country = country.trim();
             if (city) updated.city = city.trim();
-            if (imageData) updated.image = imageData;
+            if (imageUrl) updated.image = imageUrl;
             photos[idx] = updated;
             savePhotos(photos);
             syncCategories();
@@ -2379,6 +2412,7 @@
             if (!photo) return;
 
             formTitle.value = photo.title;
+            formImageUrl.value = photo.image || '';
             formFile.value = '';
             populateFormSelects(photo.country, photo.city);
             editForm.classList.add('show');
@@ -2389,6 +2423,7 @@
             editForm.classList.remove('show');
             editingId = null;
             formFile.value = '';
+            formImageUrl.value = '';
             formTitle.value = '';
             formCountry.value = '';
             formCity.innerHTML = `<option value="">— 请先选择国家 —</option>`;
@@ -2405,49 +2440,52 @@
             }
 
             const file = formFile.files[0];
-            if (file) {
-                compressImage(file, 800, 0.8, (base64) => {
+            const imageUrlInput = formImageUrl.value.trim();
+
+            // 如果输入了 URL 且没选文件，直接用 URL
+            if (imageUrlInput && !file) {
+                // 简单验证是否像 URL
+                if (imageUrlInput.startsWith('http')) {
                     if (editingId) {
-                        updatePhoto(editingId, title, country, city, base64);
+                        updatePhoto(editingId, title, country, city, imageUrlInput);
                     } else {
-                        addPhoto(title, country, city, base64);
+                        addPhoto(title, country, city, imageUrlInput);
                     }
                     closeEditForm();
-                });
-            } else {
-                if (editingId) {
-                    updatePhoto(editingId, title, country, city, null);
+                    return;
                 } else {
-                    alert('请选择一张照片');
+                    alert('请输入有效的图片链接（以 http 开头）');
                     return;
                 }
-                closeEditForm();
             }
-        }
 
-        function compressImage(file, maxW, quality, callback) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    let w = img.width,
-                        h = img.height;
-                    if (w > maxW) {
-                        const ratio = maxW / w;
-                        w = maxW;
-                        h = h * ratio;
-                    }
-                    canvas.width = w;
-                    canvas.height = h;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, w, h);
-                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
-                    callback(dataUrl);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+            // 如果选择了文件，则上传到 Cloudinary
+            if (file) {
+                syncStatus.textContent = '⏳ 正在上传到 Cloudinary...';
+                syncStatus.className = 'sync-status syncing';
+
+                uploadToCloudinary(file)
+                    .then(url => {
+                        if (editingId) {
+                            updatePhoto(editingId, title, country, city, url);
+                        } else {
+                            addPhoto(title, country, city, url);
+                        }
+                        syncStatus.textContent = '✅ 上传成功';
+                        syncStatus.className = 'sync-status success';
+                        closeEditForm();
+                    })
+                    .catch(err => {
+                        console.error('上传失败', err);
+                        syncStatus.textContent = '❌ 上传失败：' + err.message;
+                        syncStatus.className = 'sync-status error';
+                        alert('照片上传失败，请检查网络或 Cloudinary 配置');
+                    });
+                return;
+            }
+
+            // 既没选文件也没输入 URL
+            alert('请选择一张照片或输入图片链接');
         }
 
         // ---- 添加国家/城市 ----
@@ -2535,6 +2573,7 @@
             if (!isAuthorized) return;
             editingId = null;
             formTitle.value = '';
+            formImageUrl.value = '';
             formFile.value = '';
             populateFormSelects('', '');
             editForm.classList.add('show');
@@ -2575,11 +2614,12 @@
                 randomHighlightAndScroll();
             }, 500);
 
-            console.log('✨ kk的摄影 已加载 (云端同步版本)');
+            console.log('✨ kk的摄影 已加载 (Cloudinary 云端上传)');
             console.log('📸 照片总数:', photos.length);
             console.log('🏛️ 国家:', loadCountries().join(', '));
             console.log('🏙️ 城市:', loadCities().map(c => c.city).join(', '));
             console.log('🔒 管理密码: kst2142600396');
+            console.log('☁️ Cloudinary 云名:', CLOUD_NAME);
         }
 
         init();

@@ -812,9 +812,9 @@
 
     <script>
         // ================================================================
-        // 🔑 配置区 —— RestDB.io（已填好你的信息）
+        // 🔑 配置区 —— RestDB.io（已填入你的信息）
         // ================================================================
-        const API_KEY = '6a9059d0dc71a001bbfeef15';  // Web Page API Key（CORS）
+        const API_KEY = 'a6bd49885ff7aa20699af87d7b38c591bb1ef';   // Server API Key（全权限）
         const DATABASE_URL = 'https://kkphoto-c6a6.restdb.io/rest/photos';
         // ================================================================
 
@@ -851,7 +851,7 @@
         ];
 
         // ================================================================
-        //  RestDB.io 云端操作
+        //  RestDB.io 云端操作（优化版：批量插入）
         // ================================================================
 
         // 读取数据
@@ -865,27 +865,21 @@
                 });
                 if (!response.ok) throw new Error('读取失败');
                 const data = await response.json();
-                // RestDB 返回的是数组（每条记录有 _id 等字段）
-                // 需要转换成 { id, country, city, image } 格式
                 if (Array.isArray(data) && data.length > 0) {
-                    // 检查是否含有所需字段，如果有 _id 则转换为 id
                     const photos = data.map(record => ({
                         id: record._id || record.id || Math.random().toString(36).substr(2, 9),
                         country: record.country || '',
                         city: record.city || '',
                         image: record.image || ''
                     }));
-                    // 过滤掉空数据
                     const valid = photos.filter(p => p.country && p.city && p.image);
-                    if (valid.length > 0) {
-                        return valid;
-                    }
+                    if (valid.length > 0) return valid;
                 }
-                // 云端没有数据或数据为空，写入默认数据
+                // 云端无数据，写入默认
                 await saveToCloud(DEFAULT_PHOTOS);
                 return DEFAULT_PHOTOS.slice();
             } catch (error) {
-                console.warn('云端加载失败，使用本地默认数据', error);
+                console.warn('云端加载失败，使用本地缓存或默认数据', error);
                 const cached = localStorage.getItem('kk_cloud_cache');
                 if (cached) {
                     try { return JSON.parse(cached); } catch(e) {}
@@ -894,7 +888,7 @@
             }
         }
 
-        // 保存数据到云端
+        // 保存数据到云端（优化版：批量插入）
         async function saveToCloud(photos) {
             const statusEl = document.getElementById('saveStatus');
             if (statusEl) {
@@ -903,9 +897,7 @@
             }
 
             try {
-                // RestDB 写入需要先清空原有数据再批量插入
-                // 方案：先删除所有记录，再批量插入
-                // 1. 获取所有现有记录 ID
+                // 1. 先清空所有现有记录
                 const listResponse = await fetch(DATABASE_URL, {
                     headers: {
                         'x-apikey': API_KEY,
@@ -915,34 +907,43 @@
                 if (listResponse.ok) {
                     const existing = await listResponse.json();
                     if (Array.isArray(existing) && existing.length > 0) {
-                        // 删除所有记录
-                        for (const record of existing) {
-                            await fetch(`${DATABASE_URL}/${record._id}`, {
+                        // 并行删除所有记录
+                        const deletePromises = existing.map(record =>
+                            fetch(`${DATABASE_URL}/${record._id}`, {
                                 method: 'DELETE',
                                 headers: { 'x-apikey': API_KEY }
-                            });
-                        }
+                            })
+                        );
+                        await Promise.all(deletePromises);
+                        // 等待一下让删除生效
+                        await new Promise(resolve => setTimeout(resolve, 500));
                     }
                 }
 
-                // 2. 批量插入新数据
-                // RestDB 支持一次插入多条，但需要去掉 id 字段（让数据库自动生成 _id）
+                // 2. 批量插入新数据（每次最多10条）
                 const records = photos.map(p => ({
                     country: p.country,
                     city: p.city,
                     image: p.image
                 }));
 
-                // 批量插入（一次发送多条）
-                for (const rec of records) {
-                    await fetch(DATABASE_URL, {
+                const batchSize = 10;
+                for (let i = 0; i < records.length; i += batchSize) {
+                    const batch = records.slice(i, i + batchSize);
+                    const response = await fetch(DATABASE_URL, {
                         method: 'POST',
                         headers: {
                             'x-apikey': API_KEY,
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify(rec)
+                        body: JSON.stringify(batch)  // 传递数组
                     });
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        throw new Error(`批量插入失败：${response.status} ${errorText}`);
+                    }
+                    // 等待避免触发频率限制
+                    await new Promise(resolve => setTimeout(resolve, 300));
                 }
 
                 localStorage.setItem('kk_cloud_cache', JSON.stringify(photos));
@@ -1640,14 +1641,6 @@
         //  启动
         // ================================================================
         async function init() {
-            // 检查配置
-            if (API_KEY === '' || DATABASE_URL === '') {
-                alert('⚠️ 请先在代码中配置 RestDB 的 API Key 和 Database URL！');
-                photos = DEFAULT_PHOTOS.slice();
-                renderAll();
-                showAuth();
-                return;
-            }
             await initData();
             showAuth();
             console.log('✨ kk的摄影 已加载 (RestDB 同步)');

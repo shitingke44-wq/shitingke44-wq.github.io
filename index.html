@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>kk的摄影</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <style>
+        /* ===== 全局重置 & 基础 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0e0e0e;
+            color: #f0f0f0;
+            min-height: 100vh;
+            padding-top: 72px;
+            scroll-behavior: smooth;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        /* ===== 滚动条 ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d4a574;
+            border-radius: 6px;
+        }
+
+        /* ===== 导航栏 ===== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(14, 14, 14, 0.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 0 40px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .navbar .logo {
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .navbar .logo span {
+            color: #d4a574;
+        }
+
+        .navbar .logo i {
+            font-size: 22px;
+            color: #d4a574;
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .nav-cities {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .nav-cities .city-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #aaa;
+            padding: 6px 18px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-family: inherit;
+            letter-spacing: 0.3px;
+        }
+
+        .nav-cities .city-btn:hover {
+            border-color: rgba(212, 165, 116, 0.5);
+            color: #fff;
+        }
+
+        .nav-cities .city-btn.active {
+            background: #d4a574;
+            border-color: #d4a574;
+            color: #0e0e0e;
+        }
+
+        .nav-cities .city-btn.all-btn {
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ccc;
+        }
+
+        .nav-cities .city-btn.all-btn.active {
+            background: #fff;
+            border-color: #fff;
+            color: #0e0e0e;
+        }
+
+        /* ===== 搜索框 ===== */
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 30px;
+            padding: 4px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.25s;
+            flex-shrink: 0;
+        }
+
+        .search-box:focus-within {
+            border-color: #d4a574;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .search-box i {
+            color: #888;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: #eee;
+            padding: 8px 0;
+            font-size: 14px;
+            width: 150px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .search-box input::placeholder {
+            color: #666;
+        }
+
+        /* ===== 照片网格 ===== */
+        .gallery {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 30px 40px 60px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .photo-card {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #1a1a1a;
+            cursor: pointer;
+            transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                box-shadow 0.4s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            aspect-ratio: 4 / 3;
+        }
+
+        .photo-card:hover {
+            transform: translateY(-6px) scale(1.01);
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .photo-card:hover img {
+            transform: scale(1.04);
+        }
+
+        .photo-card .card-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 22px 18px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.75) 50%);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: all 0.35s ease;
+        }
+
+        .photo-card:hover .card-overlay {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .photo-card .card-overlay .photo-title {
+            font-size: 16px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            color: #fff;
+        }
+
+        .photo-card .card-overlay .photo-city {
+            font-size: 13px;
+            color: #d4a574;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(212, 165, 116, 0.2);
+        }
+
+        /* 高亮动画 (随机选中) */
+        .photo-card.highlight {
+            animation: highlightPulse 1.2s ease 3;
+            z-index: 10;
+            box-shadow: 0 0 0 4px #d4a574, 0 12px 48px rgba(212, 165, 116, 0.25);
+        }
+
+        @keyframes highlightPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 0 4px #d4a574, 0 12px 48px rgba(212, 165, 116, 0.25);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(212, 165, 116, 0.3), 0 12px 60px rgba(212, 165, 116, 0.4);
+                transform: scale(1.02);
+            }
+        }
+
+        /* 空状态 */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 80px 20px;
+            color: #666;
+            font-size: 18px;
+        }
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #333;
+        }
+
+        /* ===== 模态框 ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 2000;
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 900px;
+            width: 100%;
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: modalIn 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.92) translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -48px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.08);
+            border: none;
+            color: #fff;
+            font-size: 28px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .modal-image-wrap {
+            width: 100%;
+            background: #111;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8);
+            position: relative;
+        }
+
+        .modal-image-wrap img {
+            width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            display: block;
+            background: #0a0a0a;
+        }
+
+        /* 模态框底部：信息 + 打印机 */
+        .modal-footer {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 6px 6px 6px;
+            color: #ccc;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .modal-footer .photo-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .modal-footer .photo-info .modal-title {
+            font-size: 20px;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .modal-footer .photo-info .modal-city {
+            font-size: 14px;
+            color: #d4a574;
+        }
+
+        .modal-footer .actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .modal-footer .actions .printer-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            padding: 10px 18px;
+            border-radius: 40px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+
+        .modal-footer .actions .printer-btn i {
+            font-size: 20px;
+        }
+
+        .modal-footer .actions .printer-btn:hover {
+            background: rgba(212, 165, 116, 0.15);
+            border-color: #d4a574;
+            color: #d4a574;
+            transform: scale(1.04);
+        }
+
+        .modal-footer .actions .printer-btn.active {
+            background: rgba(212, 165, 116, 0.2);
+            border-color: #d4a574;
+            color: #d4a574;
+        }
+
+        /* ===== 宝丽来拍立得样式 ===== */
+        .polaroid-container {
+            display: none;
+            margin-top: 20px;
+            animation: polaroidAppear 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            width: 100%;
+            display: none;
+            justify-content: center;
+        }
+
+        .polaroid-container.show {
+            display: flex;
+        }
+
+        @keyframes polaroidAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.9) rotate(-2deg);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+
+        .polaroid-frame {
+            background: #f5f2ed;
+            padding: 20px 20px 56px 20px;
+            border-radius: 6px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.3);
+            max-width: 480px;
+            width: 100%;
+            transition: all 0.3s ease;
+            transform: rotate(0.6deg);
+        }
+
+        .polaroid-frame .polaroid-image {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            border-radius: 2px;
+            background: #111;
+        }
+
+        .polaroid-frame .polaroid-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .polaroid-frame .polaroid-caption {
+            text-align: center;
+            margin-top: 14px;
+            font-family: 'Courier New', 'Georgia', serif;
+            font-size: 15px;
+            color: #2d2d2d;
+            letter-spacing: 0.5px;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        .polaroid-frame .polaroid-caption .p-title {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .polaroid-frame .polaroid-caption .p-city {
+            color: #8a7a6a;
+            font-size: 13px;
+        }
+
+        .polaroid-frame .polaroid-caption .p-date {
+            color: #aaa;
+            font-size: 11px;
+            margin-top: 2px;
+            font-style: italic;
+        }
+
+        /* 关闭拍立得按钮 */
+        .polaroid-close-btn {
+            margin-top: 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #999;
+            padding: 8px 24px;
+            border-radius: 30px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-family: inherit;
+        }
+
+        .polaroid-close-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        /* ===== 页脚 ===== */
+        .footer {
+            text-align: center;
+            padding: 40px 20px 30px;
+            color: #444;
+            font-size: 13px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            letter-spacing: 0.3px;
+        }
+
+        .footer span {
+            color: #d4a574;
+        }
+
+        /* ===== 管理按钮（右下角齿轮） ===== */
+        .admin-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 3000;
+            background: rgba(212, 165, 116, 0.9);
+            color: #0e0e0e;
+            border: none;
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            font-size: 26px;
+            cursor: pointer;
+            box-shadow: 0 8px 28px rgba(212, 165, 116, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-toggle:hover {
+            transform: scale(1.08);
+            background: #d4a574;
+            box-shadow: 0 12px 40px rgba(212, 165, 116, 0.6);
+        }
+
+        /* ===== 管理面板（侧滑） ===== */
+        .admin-panel {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 560px;
+            height: 100vh;
+            background: #141414;
+            z-index: 4000;
+            padding: 24px 24px 30px;
+            overflow-y: auto;
+            transition: right 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: -8px 0 48px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .admin-panel.open {
+            right: 0;
+        }
+
+        .admin-panel .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            flex-shrink: 0;
+        }
+
+        .admin-panel .panel-header h2 {
+            font-size: 22px;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .admin-panel .panel-header h2 i {
+            color: #d4a574;
+            margin-right: 8px;
+        }
+
+        .admin-panel .panel-close {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .admin-panel .panel-close:hover {
+            color: #fff;
+        }
+
+        .admin-panel .photo-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-right: 4px;
+            max-height: 300px;
+        }
+
+        .admin-panel .photo-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: #1e1e1e;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background 0.2s;
+        }
+
+        .admin-panel .photo-item:hover {
+            background: #262626;
+        }
+
+        .admin-panel .photo-item .thumb {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #111;
+            flex-shrink: 0;
+        }
+
+        .admin-panel .photo-item .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .admin-panel .photo-item .info .item-title {
+            font-weight: 500;
+            font-size: 15px;
+            color: #eee;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .admin-panel .photo-item .info .item-city {
+            font-size: 13px;
+            color: #d4a574;
+        }
+
+        .admin-panel .photo-item .actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .admin-panel .photo-item .actions button {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #aaa;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .admin-panel .photo-item .actions .edit-btn:hover {
+            border-color: #d4a574;
+            color: #d4a574;
+            background: rgba(212, 165, 116, 0.08);
+        }
+
+        .admin-panel .photo-item .actions .del-btn:hover {
+            border-color: #e05a5a;
+            color: #e05a5a;
+            background: rgba(224, 90, 90, 0.08);
+        }
+
+        /* ===== 分类管理（国家 & 城市） ===== */
+        .category-section {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 14px;
+            flex-shrink: 0;
+        }
+
+        .category-section h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        .category-section .cat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .category-section .cat-item .cat-name {
+            color: #ddd;
+            font-size: 14px;
+        }
+
+        .category-section .cat-item .cat-count {
+            color: #888;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .category-section .cat-item .del-cat-btn {
+            background: transparent;
+            border: none;
+            color: #e05a5a;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 2px 10px;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .category-section .cat-item .del-cat-btn:hover {
+            background: rgba(224, 90, 90, 0.15);
+            color: #ff7a7a;
+        }
+
+        .category-section .add-cat-form {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .category-section .add-cat-form input,
+        .category-section .add-cat-form select {
+            background: #0e0e0e;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 8px 14px;
+            color: #f0f0f0;
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .category-section .add-cat-form input:focus,
+        .category-section .add-cat-form select:focus {
+            border-color: #d4a574;
+        }
+
+        .category-section .add-cat-form button {
+            background: rgba(212, 165, 116, 0.15);
+            border: 1px solid rgba(212, 165, 116, 0.2);
+            color: #d4a574;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .category-section .add-cat-form button:hover {
+            background: rgba(212, 165, 116, 0.25);
+            border-color: #d4a574;
+        }
+
+        .admin-panel .panel-footer {
+            flex-shrink: 0;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .admin-panel .panel-footer button {
+            background: rgba(212, 165, 116, 0.12);
+            border: 1px solid rgba(212, 165, 116, 0.2);
+            color: #d4a574;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-panel .panel-footer button:hover {
+            background: rgba(212, 165, 116, 0.2);
+            border-color: #d4a574;
+        }
+
+        .admin-panel .panel-footer button.danger {
+            background: rgba(224, 90, 90, 0.1);
+            border-color: rgba(224, 90, 90, 0.2);
+            color: #e05a5a;
+        }
+
+        .admin-panel .panel-footer button.danger:hover {
+            background: rgba(224, 90, 90, 0.18);
+        }
+
+        /* ===== 添加/编辑表单（内嵌） ===== */
+        .admin-panel .edit-form {
+            background: #1a1a1a;
+            padding: 18px 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .admin-panel .edit-form.show {
+            display: flex;
+        }
+
+        .admin-panel .edit-form .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .admin-panel .edit-form .form-row label {
+            font-size: 13px;
+            color: #aaa;
+            font-weight: 500;
+        }
+
+        .admin-panel .edit-form .form-row input,
+        .admin-panel .edit-form .form-row select {
+            background: #0e0e0e;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: #f0f0f0;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .admin-panel .edit-form .form-row input:focus,
+        .admin-panel .edit-form .form-row select:focus {
+            border-color: #d4a574;
+        }
+
+        .admin-panel .edit-form .form-row input[type="file"] {
+            padding: 8px;
+            background: transparent;
+        }
+
+        .admin-panel .edit-form .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .admin-panel .edit-form .form-actions button {
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s;
+            font-family: inherit;
+        }
+
+        .admin-panel .edit-form .form-actions .save-btn {
+            background: #d4a574;
+            color: #0e0e0e;
+        }
+
+        .admin-panel .edit-form .form-actions .save-btn:hover {
+            background: #e0b88a;
+        }
+
+        .admin-panel .edit-form .form-actions .cancel-btn {
+            background: rgba(255, 255, 255, 0.06);
+            color: #aaa;
+        }
+
+        .admin-panel .edit-form .form-actions .cancel-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 900px) {
+            .navbar {
+                padding: 0 20px;
+                height: 64px;
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            body {
+                padding-top: 64px;
+            }
+            .navbar .logo {
+                font-size: 20px;
+            }
+            .nav-center {
+                flex-wrap: wrap;
+                justify-content: flex-start;
+                gap: 6px;
+            }
+            .nav-cities .city-btn {
+                font-size: 12px;
+                padding: 4px 14px;
+            }
+            .search-box input {
+                width: 120px;
+                font-size: 13px;
+            }
+            .gallery {
+                padding: 16px 16px 40px;
+                gap: 16px;
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            }
+            .modal-content {
+                max-width: 100%;
+                padding: 0 4px;
+            }
+            .modal-close {
+                top: -44px;
+                right: 4px;
+                font-size: 22px;
+                width: 40px;
+                height: 40px;
+            }
+            .modal-footer {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .modal-footer .actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .polaroid-frame {
+                padding: 14px 14px 40px 14px;
+                max-width: 100%;
+            }
+            .polaroid-frame .polaroid-caption {
+                font-size: 13px;
+            }
+            .admin-panel {
+                max-width: 100%;
+                padding: 16px;
+            }
+            .admin-toggle {
+                width: 48px;
+                height: 48px;
+                font-size: 22px;
+                bottom: 20px;
+                right: 20px;
+            }
+            .category-section .add-cat-form {
+                flex-direction: column;
+            }
+            .category-section .add-cat-form input,
+            .category-section .add-cat-form select {
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gallery {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+                padding: 10px 10px 30px;
+            }
+            .navbar {
+                padding: 0 12px;
+                height: 58px;
+            }
+            body {
+                padding-top: 58px;
+            }
+            .navbar .logo {
+                font-size: 17px;
+            }
+            .navbar .logo i {
+                font-size: 17px;
+            }
+            .nav-cities .city-btn {
+                font-size: 11px;
+                padding: 3px 10px;
+            }
+            .search-box input {
+                width: 80px;
+                font-size: 12px;
+            }
+            .search-box {
+                padding: 2px 10px;
+            }
+            .photo-card .card-overlay .photo-title {
+                font-size: 13px;
+            }
+            .photo-card .card-overlay .photo-city {
+                font-size: 11px;
+                padding: 2px 10px;
+            }
+            .modal-footer .photo-info .modal-title {
+                font-size: 17px;
+            }
+            .modal-footer .actions .printer-btn {
+                font-size: 15px;
+                padding: 8px 14px;
+            }
+            .modal-footer .actions .printer-btn i {
+                font-size: 17px;
+            }
+            .admin-panel .photo-item {
+                padding: 8px 10px;
+            }
+            .admin-panel .photo-item .thumb {
+                width: 48px;
+                height: 48px;
+            }
+            .admin-panel .photo-item .info .item-title {
+                font-size: 13px;
+            }
+            .admin-panel .photo-item .actions button {
+                font-size: 11px;
+                padding: 3px 10px;
+            }
+            .category-section .cat-item .cat-name {
+                font-size: 13px;
+            }
+        }
+
+        /* ===== 工具类 ===== */
+        .hidden {
+            display: none !important;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .mt-8 {
+            margin-top: 8px;
+        }
+        .gap-8 {
+            gap: 8px;
+        }
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== 导航栏 ===== -->
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fas fa-camera-retro"></i>
+            kk<span>的摄影</span>
+        </div>
+        <div class="nav-center">
+            <div class="nav-cities" id="cityFilter">
+                <button class="city-btn all-btn active" data-city="all">全部</button>
+                <!-- 城市按钮由 JS 动态生成 -->
+            </div>
+            <!-- 搜索框 -->
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="搜索城市/国家..." />
+            </div>
+        </div>
+    </nav>
+
+    <!-- ===== 照片网格 ===== -->
+    <div class="gallery" id="gallery"></div>
+
+    <!-- ===== 页脚 ===== -->
+    <div class="footer">
+        © 2026 <span>kk的摄影</span> &mdash; 用镜头记录每一座城市
+    </div>
+
+    <!-- ===== 模态框 ===== -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+
+            <div class="modal-image-wrap">
+                <img id="modalImage" src="" alt="照片" />
+            </div>
+
+            <div class="modal-footer">
+                <div class="photo-info">
+                    <span class="modal-title" id="modalTitle">标题</span>
+                    <span class="modal-city" id="modalCity">城市</span>
+                </div>
+                <div class="actions">
+                    <button class="printer-btn" id="printerBtn">
+                        <i class="fas fa-print"></i> 拍立得
+                    </button>
+                </div>
+            </div>
+
+            <!-- 宝丽来拍立得 -->
+            <div class="polaroid-container" id="polaroidContainer">
+                <div class="polaroid-frame" id="polaroidFrame">
+                    <div class="polaroid-image">
+                        <img id="polaroidImg" src="" alt="拍立得照片" />
+                    </div>
+                    <div class="polaroid-caption">
+                        <div class="p-title" id="polaroidTitle">标题</div>
+                        <div class="p-city" id="polaroidCity">城市</div>
+                        <div class="p-date" id="polaroidDate">✦ 2026 · 拍立得 ✦</div>
+                    </div>
+                </div>
+                <button class="polaroid-close-btn" id="polaroidCloseBtn">
+                    <i class="fas fa-times"></i> 关闭拍立得
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 管理按钮 ===== -->
+    <button class="admin-toggle" id="adminToggle" title="管理照片">
+        <i class="fas fa-cog"></i>
+    </button>
+
+    <!-- ===== 管理面板 ===== -->
+    <div class="admin-panel" id="adminPanel">
+        <div class="panel-header">
+            <h2><i class="fas fa-images"></i> 管理照片</h2>
+            <button class="panel-close" id="adminClose"><i class="fas fa-times"></i></button>
+        </div>
+
+        <!-- 编辑/添加表单（共用） -->
+        <div class="edit-form" id="editForm">
+            <div class="form-row">
+                <label>照片文件（选图自动压缩）</label>
+                <input type="file" id="formFile" accept="image/*" />
+            </div>
+            <div class="form-row">
+                <label>标题</label>
+                <input type="text" id="formTitle" placeholder="输入照片标题" />
+            </div>
+            <div class="form-row">
+                <label>国家</label>
+                <input type="text" id="formCountry" placeholder="输入或选择国家" list="countryDatalist" />
+                <datalist id="countryDatalist"></datalist>
+            </div>
+            <div class="form-row">
+                <label>城市</label>
+                <input type="text" id="formCity" placeholder="输入或选择城市" list="cityDatalist" />
+                <datalist id="cityDatalist"></datalist>
+            </div>
+            <div class="form-actions">
+                <button class="save-btn" id="formSaveBtn">保存</button>
+                <button class="cancel-btn" id="formCancelBtn">取消</button>
+            </div>
+        </div>
+
+        <div class="photo-list" id="adminPhotoList">
+            <!-- 动态渲染 -->
+        </div>
+
+        <!-- ===== 国家管理 ===== -->
+        <div class="category-section">
+            <h3><i class="fas fa-flag"></i> 国家管理</h3>
+            <div id="countryListAdmin">
+                <!-- 动态渲染 -->
+            </div>
+            <div class="add-cat-form">
+                <input type="text" id="newCountryInput" placeholder="输入国家名称" />
+                <button id="addCountryBtn">添加国家</button>
+            </div>
+        </div>
+
+        <!-- ===== 城市管理 ===== -->
+        <div class="category-section">
+            <h3><i class="fas fa-city"></i> 城市管理</h3>
+            <div id="cityListAdmin">
+                <!-- 动态渲染 -->
+            </div>
+            <div class="add-cat-form">
+                <select id="cityCountrySelect">
+                    <option value="">— 选择国家 —</option>
+                </select>
+                <input type="text" id="newCityInput" placeholder="输入城市名称" />
+                <button id="addCityBtn">添加城市</button>
+            </div>
+        </div>
+
+        <div class="panel-footer">
+            <button id="addPhotoBtn"><i class="fas fa-plus"></i> 添加照片</button>
+            <button class="danger" id="resetDefaultBtn"><i class="fas fa-undo-alt"></i> 恢复默认示例</button>
+        </div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  数据管理（localStorage）
+        // ================================================================
+        const STORAGE_KEY = 'kk_photos_data_v2';
+
+        // 默认示例数据（带有国家字段）
+        const DEFAULT_PHOTOS = [{
+            id: 1,
+            title: '故宫的晨光',
+            country: '中国',
+            city: '北京',
+            image: 'https://picsum.photos/seed/beijing1/800/600'
+        }, {
+            id: 2,
+            title: '胡同里的猫',
+            country: '中国',
+            city: '北京',
+            image: 'https://picsum.photos/seed/beijing2/800/600'
+        }, {
+            id: 3,
+            title: '国贸日落',
+            country: '中国',
+            city: '北京',
+            image: 'https://picsum.photos/seed/beijing3/800/600'
+        }, {
+            id: 4,
+            title: '后海夜色',
+            country: '中国',
+            city: '北京',
+            image: 'https://picsum.photos/seed/beijing4/800/600'
+        }, {
+            id: 5,
+            title: '外滩风云',
+            country: '中国',
+            city: '上海',
+            image: 'https://picsum.photos/seed/shanghai1/800/600'
+        }, {
+            id: 6,
+            title: '弄堂光影',
+            country: '中国',
+            city: '上海',
+            image: 'https://picsum.photos/seed/shanghai2/800/600'
+        }, {
+            id: 7,
+            title: '陆家嘴之夜',
+            country: '中国',
+            city: '上海',
+            image: 'https://picsum.photos/seed/shanghai3/800/600'
+        }, {
+            id: 8,
+            title: '武康路转角',
+            country: '中国',
+            city: '上海',
+            image: 'https://picsum.photos/seed/shanghai4/800/600'
+        }, {
+            id: 9,
+            title: '珠江漫步',
+            country: '中国',
+            city: '广州',
+            image: 'https://picsum.photos/seed/guangzhou1/800/600'
+        }, {
+            id: 10,
+            title: '沙面老建筑',
+            country: '中国',
+            city: '广州',
+            image: 'https://picsum.photos/seed/guangzhou2/800/600'
+        }, {
+            id: 11,
+            title: '广州塔云端',
+            country: '中国',
+            city: '广州',
+            image: 'https://picsum.photos/seed/guangzhou3/800/600'
+        }, {
+            id: 12,
+            title: '深圳湾日落',
+            country: '中国',
+            city: '深圳',
+            image: 'https://picsum.photos/seed/shenzhen1/800/600'
+        }, {
+            id: 13,
+            title: '华侨城创意园',
+            country: '中国',
+            city: '深圳',
+            image: 'https://picsum.photos/seed/shenzhen2/800/600'
+        }, {
+            id: 14,
+            title: '梧桐山远眺',
+            country: '中国',
+            city: '深圳',
+            image: 'https://picsum.photos/seed/shenzhen3/800/600'
+        }, {
+            id: 15,
+            title: '西湖晨雾',
+            country: '中国',
+            city: '杭州',
+            image: 'https://picsum.photos/seed/hangzhou1/800/600'
+        }, {
+            id: 16,
+            title: '断桥残雪',
+            country: '中国',
+            city: '杭州',
+            image: 'https://picsum.photos/seed/hangzhou2/800/600'
+        }, {
+            id: 17,
+            title: '龙井茶园',
+            country: '中国',
+            city: '杭州',
+            image: 'https://picsum.photos/seed/hangzhou3/800/600'
+        }, {
+            id: 18,
+            title: '宽窄巷子',
+            country: '中国',
+            city: '成都',
+            image: 'https://picsum.photos/seed/chengdu1/800/600'
+        }, {
+            id: 19,
+            title: '锦里夜色',
+            country: '中国',
+            city: '成都',
+            image: 'https://picsum.photos/seed/chengdu2/800/600'
+        }, {
+            id: 20,
+            title: '大熊猫基地',
+            country: '中国',
+            city: '成都',
+            image: 'https://picsum.photos/seed/chengdu3/800/600'
+        }, {
+            id: 21,
+            title: '洪崖洞夜景',
+            country: '中国',
+            city: '重庆',
+            image: 'https://picsum.photos/seed/chongqing1/800/600'
+        }, {
+            id: 22,
+            title: '山城步道',
+            country: '中国',
+            city: '重庆',
+            image: 'https://picsum.photos/seed/chongqing2/800/600'
+        }, {
+            id: 23,
+            title: '长江索道',
+            country: '中国',
+            city: '重庆',
+            image: 'https://picsum.photos/seed/chongqing3/800/600'
+        }, {
+            id: 24,
+            title: '钟楼暮色',
+            country: '中国',
+            city: '西安',
+            image: 'https://picsum.photos/seed/xian1/800/600'
+        }, {
+            id: 25,
+            title: '城墙根下',
+            country: '中国',
+            city: '西安',
+            image: 'https://picsum.photos/seed/xian2/800/600'
+        }, {
+            id: 26,
+            title: '大唐不夜城',
+            country: '中国',
+            city: '西安',
+            image: 'https://picsum.photos/seed/xian3/800/600'
+        }];
+
+        // 读取数据，若无则写入默认并返回
+        function loadPhotos() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    const data = JSON.parse(stored);
+                    if (Array.isArray(data) && data.length) {
+                        // 检查是否含有 country 字段，若没有则迁移
+                        if (!data[0].country) {
+                            // 将原有 city 作为 country，但建议设置为“中国”或保留原city作为country？
+                            // 更好的方法：将原有 city 复制到 country，但这样会不准确。我们假设默认都来自中国。
+                            const migrated = data.map(p => ({
+                                ...p,
+                                country: '中国' // 默认国家
+                            }));
+                            savePhotos(migrated);
+                            return migrated;
+                        }
+                        return data;
+                    }
+                } catch (e) { /* 忽略 */ }
+            }
+            // 没有有效数据则写入默认
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_PHOTOS));
+            return DEFAULT_PHOTOS.slice();
+        }
+
+        function savePhotos(photos) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(photos));
+        }
+
+        // 生成新ID
+        function nextId(photos) {
+            if (!photos.length) return 1;
+            const maxId = Math.max(...photos.map(p => p.id));
+            return maxId + 1;
+        }
+
+        // ================================================================
+        //  核心功能
+        // ================================================================
+        let currentFilter = 'all';
+        let currentPhotoId = null;
+        let isPolaroidOpen = false;
+        let photos = loadPhotos();
+
+        // DOM 引用
+        const gallery = document.getElementById('gallery');
+        const cityFilter = document.getElementById('cityFilter');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalImage = document.getElementById('modalImage');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalCity = document.getElementById('modalCity');
+        const modalClose = document.getElementById('modalClose');
+        const printerBtn = document.getElementById('printerBtn');
+        const polaroidContainer = document.getElementById('polaroidContainer');
+        const polaroidImg = document.getElementById('polaroidImg');
+        const polaroidTitle = document.getElementById('polaroidTitle');
+        const polaroidCity = document.getElementById('polaroidCity');
+        const polaroidCloseBtn = document.getElementById('polaroidCloseBtn');
+
+        // 管理面板 DOM
+        const adminToggle = document.getElementById('adminToggle');
+        const adminPanel = document.getElementById('adminPanel');
+        const adminClose = document.getElementById('adminClose');
+        const adminPhotoList = document.getElementById('adminPhotoList');
+        const countryListAdmin = document.getElementById('countryListAdmin');
+        const cityListAdmin = document.getElementById('cityListAdmin');
+        const editForm = document.getElementById('editForm');
+        const formFile = document.getElementById('formFile');
+        const formTitle = document.getElementById('formTitle');
+        const formCountry = document.getElementById('formCountry');
+        const formCity = document.getElementById('formCity');
+        const countryDatalist = document.getElementById('countryDatalist');
+        const cityDatalist = document.getElementById('cityDatalist');
+        const formSaveBtn = document.getElementById('formSaveBtn');
+        const formCancelBtn = document.getElementById('formCancelBtn');
+        const addPhotoBtn = document.getElementById('addPhotoBtn');
+        const resetDefaultBtn = document.getElementById('resetDefaultBtn');
+        const searchInput = document.getElementById('searchInput');
+
+        // 国家/城市管理 DOM
+        const newCountryInput = document.getElementById('newCountryInput');
+        const addCountryBtn = document.getElementById('addCountryBtn');
+        const cityCountrySelect = document.getElementById('cityCountrySelect');
+        const newCityInput = document.getElementById('newCityInput');
+        const addCityBtn = document.getElementById('addCityBtn');
+
+        // ---- 工具函数 ----
+        function getCountries(photos) {
+            const set = new Set();
+            photos.forEach(p => set.add(p.country));
+            return Array.from(set).sort();
+        }
+
+        function getCities(photos) {
+            const set = new Set();
+            photos.forEach(p => set.add(p.city));
+            return Array.from(set).sort();
+        }
+
+        function getCitiesByCountry(photos, country) {
+            const set = new Set();
+            photos.filter(p => p.country === country).forEach(p => set.add(p.city));
+            return Array.from(set).sort();
+        }
+
+        function getPhotosByCity(city) {
+            if (city === 'all') return photos;
+            return photos.filter(p => p.city === city);
+        }
+
+        function getPhotoById(id) {
+            return photos.find(p => p.id === id);
+        }
+
+        // ---- 渲染城市按钮（导航栏） ----
+        function renderCityButtons() {
+            const cities = getCities(photos);
+            const allBtn = cityFilter.querySelector('.all-btn');
+            if (!allBtn) return;
+            cityFilter.querySelectorAll('.city-btn:not(.all-btn)').forEach(btn => btn.remove());
+
+            cities.forEach(city => {
+                const btn = document.createElement('button');
+                btn.className = 'city-btn';
+                btn.dataset.city = city;
+                btn.textContent = city;
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = city;
+                    renderGallery(city);
+                });
+                cityFilter.appendChild(btn);
+            });
+
+            // 重新绑定全部按钮
+            const newAllBtn = allBtn.cloneNode(true);
+            allBtn.parentNode.replaceChild(newAllBtn, allBtn);
+            newAllBtn.addEventListener('click', function() {
+                document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentFilter = 'all';
+                renderGallery('all');
+            });
+            document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+            const targetBtn = document.querySelector(`.city-btn[data-city="${currentFilter}"]`) || newAllBtn;
+            targetBtn.classList.add('active');
+        }
+
+        // ---- 渲染网格（支持搜索过滤） ----
+        function renderGallery(city, searchTerm = '') {
+            let filtered = getPhotosByCity(city);
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase();
+                filtered = filtered.filter(p =>
+                    p.city.toLowerCase().includes(term) ||
+                    p.country.toLowerCase().includes(term)
+                );
+            }
+
+            if (filtered.length === 0) {
+                gallery.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <p>没有找到匹配的照片<br /><span style="font-size:14px;color:#555;">试试其他关键词</span></p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach((p, index) => {
+                html += `
+                    <div class="photo-card" data-id="${p.id}" data-city="${p.city}" data-index="${index}">
+                        <img src="${p.image}" alt="${p.title}" loading="lazy" />
+                        <div class="card-overlay">
+                            <span class="photo-title">${p.title}</span>
+                            <span class="photo-city"><i class="fas fa-map-pin" style="font-size:11px;margin-right:4px;"></i>${p.city}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            gallery.innerHTML = html;
+
+            document.querySelectorAll('.photo-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const id = parseInt(this.dataset.id);
+                    openModal(id);
+                });
+            });
+
+            // 随机高亮（仅当为全部且无搜索时）
+            if (city === 'all' && !searchTerm && !window._highlighted) {
+                window._highlighted = true;
+                setTimeout(randomHighlightAndScroll, 300);
+            } else {
+                if (city !== 'all' || searchTerm) window._highlighted = false;
+            }
+        }
+
+        // ---- 搜索监听 ----
+        searchInput.addEventListener('input', function() {
+            const term = this.value.trim();
+            renderGallery(currentFilter, term);
+        });
+
+        // ---- 随机高亮 ----
+        function randomHighlightAndScroll() {
+            const cards = document.querySelectorAll('.photo-card');
+            if (cards.length === 0) return;
+            cards.forEach(c => c.classList.remove('highlight'));
+
+            const randomIndex = Math.floor(Math.random() * cards.length);
+            const target = cards[randomIndex];
+            if (!target) return;
+
+            target.classList.add('highlight');
+            const rect = target.getBoundingClientRect();
+            const offset = rect.top + window.pageYOffset - 120;
+            window.scrollTo({ top: offset, behavior: 'smooth' });
+
+            setTimeout(() => {
+                target.classList.remove('highlight');
+            }, 3800);
+        }
+
+        // ---- 模态框 ----
+        function openModal(id) {
+            const photo = getPhotoById(id);
+            if (!photo) return;
+            currentPhotoId = id;
+            isPolaroidOpen = false;
+
+            modalImage.src = photo.image;
+            modalImage.alt = photo.title;
+            modalTitle.textContent = photo.title;
+            modalCity.textContent = `${photo.country} · ${photo.city}`;
+
+            polaroidContainer.classList.remove('show');
+            polaroidContainer.style.display = 'none';
+            printerBtn.classList.remove('active');
+
+            modalOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+            polaroidContainer.classList.remove('show');
+            polaroidContainer.style.display = 'none';
+            printerBtn.classList.remove('active');
+            isPolaroidOpen = false;
+        }
+
+        function togglePolaroid() {
+            if (!currentPhotoId) return;
+            const photo = getPhotoById(currentPhotoId);
+            if (!photo) return;
+
+            if (isPolaroidOpen) {
+                polaroidContainer.classList.remove('show');
+                polaroidContainer.style.display = 'none';
+                printerBtn.classList.remove('active');
+                isPolaroidOpen = false;
+                return;
+            }
+
+            polaroidImg.src = photo.image;
+            polaroidImg.alt = photo.title;
+            polaroidTitle.textContent = photo.title;
+            polaroidCity.textContent = `${photo.country} · ${photo.city}`;
+
+            polaroidContainer.style.display = 'flex';
+            requestAnimationFrame(() => {
+                polaroidContainer.classList.add('show');
+            });
+            printerBtn.classList.add('active');
+            isPolaroidOpen = true;
+        }
+
+        // ---- 管理面板渲染 ----
+        function renderAdminList() {
+            if (photos.length === 0) {
+                adminPhotoList.innerHTML = `<div style="color:#666;text-align:center;padding:30px;">暂无照片，点击 "添加照片" 上传</div>`;
+                return;
+            }
+            let html = '';
+            photos.forEach(p => {
+                html += `
+                    <div class="photo-item" data-id="${p.id}">
+                        <img class="thumb" src="${p.image}" alt="${p.title}" />
+                        <div class="info">
+                            <div class="item-title">${p.title}</div>
+                            <div class="item-city">${p.country} · ${p.city}</div>
+                        </div>
+                        <div class="actions">
+                            <button class="edit-btn" data-id="${p.id}">✏️ 编辑</button>
+                            <button class="del-btn" data-id="${p.id}">🗑️ 删除</button>
+                        </div>
+                    </div>
+                `;
+            });
+            adminPhotoList.innerHTML = html;
+
+            adminPhotoList.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = parseInt(this.dataset.id);
+                    openEditForm(id);
+                });
+            });
+            adminPhotoList.querySelectorAll('.del-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = parseInt(this.dataset.id);
+                    if (confirm('确定删除这张照片吗？')) {
+                        deletePhoto(id);
+                    }
+                });
+            });
+        }
+
+        // ---- 国家管理渲染 ----
+        function renderCountryAdminList() {
+            const countries = getCountries(photos);
+            if (countries.length === 0) {
+                countryListAdmin.innerHTML = `<div style="color:#666;font-size:13px;padding:4px 0;">暂无国家</div>`;
+                return;
+            }
+            let html = '';
+            countries.forEach(country => {
+                const count = photos.filter(p => p.country === country).length;
+                html += `
+                    <div class="cat-item">
+                        <span>
+                            <span class="cat-name">${country}</span>
+                            <span class="cat-count">（${count} 张）</span>
+                        </span>
+                        <button class="del-cat-btn" data-country="${country}">删除</button>
+                    </div>
+                `;
+            });
+            countryListAdmin.innerHTML = html;
+
+            countryListAdmin.querySelectorAll('.del-cat-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const country = this.dataset.country;
+                    const count = photos.filter(p => p.country === country).length;
+                    if (confirm(`确定删除国家“${country}”及其所有照片（共 ${count} 张）吗？此操作不可撤销！`)) {
+                        deleteCountry(country);
+                    }
+                });
+            });
+
+            // 更新城市管理的国家下拉框
+            populateCountrySelect();
+        }
+
+        // ---- 城市管理渲染 ----
+        function renderCityAdminList() {
+            const cities = getCities(photos);
+            if (cities.length === 0) {
+                cityListAdmin.innerHTML = `<div style="color:#666;font-size:13px;padding:4px 0;">暂无城市</div>`;
+                return;
+            }
+            let html = '';
+            // 按国家分组显示
+            const countries = getCountries(photos);
+            countries.forEach(country => {
+                const citiesInCountry = getCitiesByCountry(photos, country);
+                if (citiesInCountry.length === 0) return;
+                html += `<div style="margin-top:4px;color:#888;font-size:12px;">${country}</div>`;
+                citiesInCountry.forEach(city => {
+                    const count = photos.filter(p => p.city === city && p.country === country).length;
+                    html += `
+                        <div class="cat-item" style="padding-left:16px;">
+                            <span>
+                                <span class="cat-name">${city}</span>
+                                <span class="cat-count">（${count} 张）</span>
+                            </span>
+                            <button class="del-cat-btn" data-city="${city}" data-country="${country}">删除</button>
+                        </div>
+                    `;
+                });
+            });
+            cityListAdmin.innerHTML = html;
+
+            cityListAdmin.querySelectorAll('.del-cat-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const city = this.dataset.city;
+                    const country = this.dataset.country;
+                    const count = photos.filter(p => p.city === city && p.country === country).length;
+                    if (confirm(`确定删除城市“${city}”（${country}）及其所有照片（共 ${count} 张）吗？此操作不可撤销！`)) {
+                        deleteCity(city, country);
+                    }
+                });
+            });
+        }
+
+        // ---- 增删改操作 ----
+        function addPhoto(title, country, city, imageData) {
+            const newPhoto = {
+                id: nextId(photos),
+                title: title.trim(),
+                country: country.trim(),
+                city: city.trim(),
+                image: imageData
+            };
+            photos.push(newPhoto);
+            savePhotos(photos);
+            refreshAll();
+        }
+
+        function updatePhoto(id, title, country, city, imageData) {
+            const idx = photos.findIndex(p => p.id === id);
+            if (idx === -1) return;
+            const updated = { ...photos[idx] };
+            if (title) updated.title = title.trim();
+            if (country) updated.country = country.trim();
+            if (city) updated.city = city.trim();
+            if (imageData) updated.image = imageData;
+            photos[idx] = updated;
+            savePhotos(photos);
+            refreshAll();
+        }
+
+        function deletePhoto(id) {
+            photos = photos.filter(p => p.id !== id);
+            savePhotos(photos);
+            refreshAll();
+            if (currentPhotoId === id) closeModal();
+        }
+
+        function deleteCountry(country) {
+            photos = photos.filter(p => p.country !== country);
+            savePhotos(photos);
+            if (currentFilter === country) currentFilter = 'all';
+            refreshAll();
+            if (currentPhotoId) {
+                const photo = getPhotoById(currentPhotoId);
+                if (!photo) closeModal();
+            }
+        }
+
+        function deleteCity(city, country) {
+            photos = photos.filter(p => !(p.city === city && p.country === country));
+            savePhotos(photos);
+            if (currentFilter === city) currentFilter = 'all';
+            refreshAll();
+            if (currentPhotoId) {
+                const photo = getPhotoById(currentPhotoId);
+                if (!photo) closeModal();
+            }
+        }
+
+        function resetToDefault() {
+            if (confirm('将恢复默认示例照片，当前数据将被覆盖，确定吗？')) {
+                photos = DEFAULT_PHOTOS.slice();
+                savePhotos(photos);
+                refreshAll();
+                closeModal();
+            }
+        }
+
+        // ---- 添加国家 ----
+        function addCountry() {
+            const name = newCountryInput.value.trim();
+            if (!name) return alert('请输入国家名称');
+            if (getCountries(photos).includes(name)) return alert('国家已存在');
+            // 添加国家实际上不需要创建实体，只要在照片中出现即可。但我们可以在没有照片时也允许添加国家，这里简单提示。
+            // 更好的做法：在添加城市时自动创建国家，或者这里仅作为快捷操作，我们创建一个示例提示。
+            alert(`国家“${name}”已添加，你可以在照片中选择它。`);
+            newCountryInput.value = '';
+            // 刷新下拉列表
+            populateCountrySelect();
+            renderCountryAdminList();
+            // 更新表单的datalist
+            updateDatalists();
+        }
+
+        // ---- 添加城市 ----
+        function addCity() {
+            const country = cityCountrySelect.value;
+            const cityName = newCityInput.value.trim();
+            if (!country) return alert('请选择国家');
+            if (!cityName) return alert('请输入城市名称');
+            // 检查该国家下是否已有该城市
+            const existing = photos.some(p => p.country === country && p.city === cityName);
+            if (existing) return alert('该城市已存在');
+            // 添加城市同样不需要实体，但为了友好，提示用户。
+            alert(`城市“${cityName}”（${country}）已添加，你可以在照片中选择它。`);
+            newCityInput.value = '';
+            // 刷新
+            renderCityAdminList();
+            updateDatalists();
+            // 更新城市下拉框建议
+            populateCountrySelect();
+        }
+
+        // ---- 填充城市管理中的国家下拉 ----
+        function populateCountrySelect() {
+            const countries = getCountries(photos);
+            const currentVal = cityCountrySelect.value;
+            cityCountrySelect.innerHTML = `<option value="">— 选择国家 —</option>`;
+            countries.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                cityCountrySelect.appendChild(opt);
+            });
+            if (currentVal && countries.includes(currentVal)) {
+                cityCountrySelect.value = currentVal;
+            }
+        }
+
+        // ---- 更新表单中的 datalist ----
+        function updateDatalists() {
+            const countries = getCountries(photos);
+            const cities = getCities(photos);
+            countryDatalist.innerHTML = countries.map(c => `<option value="${c}">`).join('');
+            cityDatalist.innerHTML = cities.map(c => `<option value="${c}">`).join('');
+        }
+
+        // ---- 刷新所有UI ----
+        function refreshAll() {
+            photos = loadPhotos();
+            renderCityButtons();
+            renderGallery(currentFilter, searchInput.value.trim());
+            renderAdminList();
+            renderCountryAdminList();
+            renderCityAdminList();
+            updateDatalists();
+            populateCountrySelect();
+            closeEditForm();
+        }
+
+        // ---- 编辑表单 ----
+        let editingId = null;
+
+        function openEditForm(id) {
+            editingId = id;
+            const photo = getPhotoById(id);
+            if (!photo) return;
+
+            formTitle.value = photo.title;
+            formCountry.value = photo.country;
+            formCity.value = photo.city;
+            formFile.value = '';
+            editForm.classList.add('show');
+            editForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function closeEditForm() {
+            editForm.classList.remove('show');
+            editingId = null;
+            formFile.value = '';
+            formTitle.value = '';
+            formCountry.value = '';
+            formCity.value = '';
+        }
+
+        function saveForm() {
+            const title = formTitle.value.trim();
+            const country = formCountry.value.trim();
+            const city = formCity.value.trim();
+            if (!title || !country || !city) {
+                alert('标题、国家和城市都不能为空');
+                return;
+            }
+
+            const file = formFile.files[0];
+            if (file) {
+                compressImage(file, 800, 0.8, (base64) => {
+                    if (editingId) {
+                        updatePhoto(editingId, title, country, city, base64);
+                    } else {
+                        addPhoto(title, country, city, base64);
+                    }
+                    closeEditForm();
+                });
+            } else {
+                if (editingId) {
+                    updatePhoto(editingId, title, country, city, null);
+                } else {
+                    alert('请选择一张照片');
+                    return;
+                }
+                closeEditForm();
+            }
+        }
+
+        // 压缩图片工具
+        function compressImage(file, maxW, quality, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width,
+                        h = img.height;
+                    if (w > maxW) {
+                        const ratio = maxW / w;
+                        w = maxW;
+                        h = h * ratio;
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    callback(dataUrl);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ================================================================
+        //  事件绑定
+        // ================================================================
+
+        modalClose.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (modalOverlay.classList.contains('active')) closeModal();
+                if (adminPanel.classList.contains('open')) closeAdminPanel();
+            }
+        });
+        printerBtn.addEventListener('click', togglePolaroid);
+        polaroidCloseBtn.addEventListener('click', function() {
+            polaroidContainer.classList.remove('show');
+            polaroidContainer.style.display = 'none';
+            printerBtn.classList.remove('active');
+            isPolaroidOpen = false;
+        });
+
+        adminToggle.addEventListener('click', function() {
+            adminPanel.classList.toggle('open');
+            if (adminPanel.classList.contains('open')) {
+                renderAdminList();
+                renderCountryAdminList();
+                renderCityAdminList();
+                updateDatalists();
+                populateCountrySelect();
+                closeEditForm();
+            }
+        });
+
+        adminClose.addEventListener('click', closeAdminPanel);
+
+        function closeAdminPanel() {
+            adminPanel.classList.remove('open');
+            closeEditForm();
+        }
+
+        addPhotoBtn.addEventListener('click', function() {
+            editingId = null;
+            formTitle.value = '';
+            formCountry.value = '';
+            formCity.value = '';
+            formFile.value = '';
+            editForm.classList.add('show');
+            formTitle.focus();
+        });
+
+        formCancelBtn.addEventListener('click', closeEditForm);
+        formSaveBtn.addEventListener('click', saveForm);
+        formTitle.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveForm(); });
+        formCountry.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveForm(); });
+        formCity.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveForm(); });
+        resetDefaultBtn.addEventListener('click', resetToDefault);
+
+        // 国家管理
+        addCountryBtn.addEventListener('click', addCountry);
+        newCountryInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addCountry(); });
+
+        // 城市管理
+        addCityBtn.addEventListener('click', addCity);
+        newCityInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addCity(); });
+
+        // ================================================================
+        //  初始化
+        // ================================================================
+        function init() {
+            photos = loadPhotos();
+            renderCityButtons();
+            renderGallery('all');
+            renderAdminList();
+            renderCountryAdminList();
+            renderCityAdminList();
+            updateDatalists();
+            populateCountrySelect();
+
+            window._highlighted = false;
+            setTimeout(() => {
+                window._highlighted = false;
+                randomHighlightAndScroll();
+            }, 500);
+
+            console.log('✨ kk的摄影 已加载 (国家-城市两级分类 + 搜索)');
+            console.log('📸 照片总数:', photos.length);
+            console.log('🏛️ 国家:', getCountries(photos).join(', '));
+            console.log('🏙️ 城市:', getCities(photos).join(', '));
+            console.log('🛠️ 点击右下角齿轮管理照片、国家和城市');
+        }
+
+        init();
+    </script>
+
+</body>
+</html>

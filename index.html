@@ -6,7 +6,7 @@
     <title>kk的摄影</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ===== 全局重置 & 基础 ===== */
+        /* ===== 全局 ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -18,11 +18,11 @@
         }
         a { text-decoration: none; color: inherit; }
         img { display: block; width: 100%; height: auto; }
-
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #1a1a1a; }
         ::-webkit-scrollbar-thumb { background: #d4a574; border-radius: 6px; }
 
+        /* ===== 导航栏 ===== */
         .navbar {
             position: fixed;
             top: 0;
@@ -108,6 +108,7 @@
         }
         .search-box input::placeholder { color: #666; }
 
+        /* ===== 照片网格 ===== */
         .gallery {
             max-width: 1440px;
             margin: 0 auto;
@@ -175,6 +176,7 @@
         }
         .empty-state i { font-size: 48px; margin-bottom: 16px; color: #333; }
 
+        /* ===== 模态框 ===== */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -330,6 +332,7 @@
         }
         .polaroid-close-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
 
+        /* ===== 页脚 ===== */
         .footer {
             text-align: center;
             padding: 40px 20px 30px;
@@ -340,6 +343,7 @@
         }
         .footer span { color: #d4a574; }
 
+        /* ===== 管理按钮 ===== */
         .admin-toggle {
             position: fixed;
             bottom: 30px;
@@ -361,6 +365,7 @@
         }
         .admin-toggle:hover { transform: scale(1.08); background: #d4a574; box-shadow: 0 12px 40px rgba(212,165,116,0.6); }
 
+        /* ===== 管理面板 ===== */
         .admin-panel {
             position: fixed;
             top: 0;
@@ -399,6 +404,7 @@
         }
         .admin-panel .panel-close:hover { color: #fff; }
 
+        /* 密码验证 */
         .admin-auth {
             display: flex;
             flex-direction: column;
@@ -495,6 +501,7 @@
         .admin-panel .photo-item .actions .edit-btn:hover { border-color: #d4a574; color: #d4a574; background: rgba(212,165,116,0.08); }
         .admin-panel .photo-item .actions .del-btn:hover { border-color: #e05a5a; color: #e05a5a; background: rgba(224,90,90,0.08); }
 
+        /* 分类管理 */
         .category-section {
             border-top: 1px solid rgba(255,255,255,0.06);
             padding-top: 14px;
@@ -761,7 +768,7 @@
         </div>
 
         <div class="admin-content" id="adminContent">
-            <div class="save-status" id="saveStatus">✅ 已同步到云端</div>
+            <div class="save-status" id="saveStatus">✅ 数据已保存</div>
 
             <div class="edit-form" id="editForm">
                 <div class="form-row">
@@ -812,15 +819,22 @@
 
     <script>
         // ================================================================
-        // 🔑 配置区 —— 使用 Full Access API Key（完整读写权限）
+        //  配置
         // ================================================================
-        const API_KEY = 'a6bd49885ff7aa20699af87d7b38c591bb1ef';
-        const DATABASE_URL = 'https://kkphoto-c6a6.restdb.io/rest/photos';
-        // ================================================================
-
         const ADMIN_PASSWORD = 'kst2142600396';
 
-        // 默认示例数据（无标题）
+        // RestDB 配置（用于云端备份）
+        const API_KEY = 'a6bd49885ff7aa20699af87d7b38c591bb1ef';
+        const DATABASE_URL = 'https://kkphoto-c6a6.restdb.io/rest/photos';
+
+        // ================================================================
+        //  数据层（localStorage 为主）
+        // ================================================================
+        let photos = [];
+        let countries = [];
+        let cities = []; // 对象 { country, city }
+
+        // 默认初始数据
         const DEFAULT_PHOTOS = [
             { id: 1, country: '中国', city: '北京', image: 'https://picsum.photos/seed/beijing1/800/600' },
             { id: 2, country: '中国', city: '北京', image: 'https://picsum.photos/seed/beijing2/800/600' },
@@ -849,254 +863,214 @@
             { id: 25, country: '中国', city: '西安', image: 'https://picsum.photos/seed/xian2/800/600' },
             { id: 26, country: '中国', city: '西安', image: 'https://picsum.photos/seed/xian3/800/600' }
         ];
+        const DEFAULT_COUNTRIES = ['中国'];
+        const DEFAULT_CITIES = [{ country: '中国', city: '北京' }, { country: '中国', city: '上海' }, { country: '中国', city: '广州' },
+            { country: '中国', city: '深圳' }, { country: '中国', city: '杭州' }, { country: '中国', city: '成都' }, { country: '中国',
+                city: '重庆' }, { country: '中国', city: '西安' }
+        ];
 
-        // ================================================================
-        //  RestDB.io 云端操作（优化版：批量插入）
-        // ================================================================
-
-        // 读取数据
-        async function loadFromCloud() {
-            try {
-                const response = await fetch(DATABASE_URL, {
-                    headers: {
-                        'x-apikey': API_KEY,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (!response.ok) throw new Error('读取失败');
-                const data = await response.json();
-                if (Array.isArray(data) && data.length > 0) {
-                    const photos = data.map(record => ({
-                        id: record._id || record.id || Math.random().toString(36).substr(2, 9),
-                        country: record.country || '',
-                        city: record.city || '',
-                        image: record.image || ''
-                    }));
-                    const valid = photos.filter(p => p.country && p.city && p.image);
-                    if (valid.length > 0) return valid;
-                }
-                // 云端无数据，写入默认
-                await saveToCloud(DEFAULT_PHOTOS);
-                return DEFAULT_PHOTOS.slice();
-            } catch (error) {
-                console.warn('云端加载失败，使用本地缓存或默认数据', error);
-                const cached = localStorage.getItem('kk_cloud_cache');
-                if (cached) {
-                    try { return JSON.parse(cached); } catch(e) {}
-                }
-                return DEFAULT_PHOTOS.slice();
-            }
+        // ---- 加载/保存本地 ----
+        function loadLocalData() {
+            const p = localStorage.getItem('kk_photos');
+            photos = p ? JSON.parse(p) : DEFAULT_PHOTOS.slice();
+            const c = localStorage.getItem('kk_countries');
+            countries = c ? JSON.parse(c) : DEFAULT_COUNTRIES.slice();
+            const ci = localStorage.getItem('kk_cities');
+            cities = ci ? JSON.parse(ci) : DEFAULT_CITIES.slice();
         }
 
-        // 保存数据到云端（优化版：批量插入）
-        async function saveToCloud(photos) {
-            const statusEl = document.getElementById('saveStatus');
-            if (statusEl) {
-                statusEl.textContent = '⏳ 正在保存到云端...';
-                statusEl.className = 'save-status saving';
-            }
-
-            try {
-                // 1. 先清空所有现有记录
-                const listResponse = await fetch(DATABASE_URL, {
-                    headers: {
-                        'x-apikey': API_KEY,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (listResponse.ok) {
-                    const existing = await listResponse.json();
-                    if (Array.isArray(existing) && existing.length > 0) {
-                        // 并行删除所有记录
-                        const deletePromises = existing.map(record =>
-                            fetch(`${DATABASE_URL}/${record._id}`, {
-                                method: 'DELETE',
-                                headers: { 'x-apikey': API_KEY }
-                            })
-                        );
-                        await Promise.all(deletePromises);
-                        // 等待一下让删除生效
-                        await new Promise(resolve => setTimeout(resolve, 500));
-                    }
-                }
-
-                // 2. 批量插入新数据（每次最多10条）
-                const records = photos.map(p => ({
-                    country: p.country,
-                    city: p.city,
-                    image: p.image
-                }));
-
-                const batchSize = 10;
-                for (let i = 0; i < records.length; i += batchSize) {
-                    const batch = records.slice(i, i + batchSize);
-                    const response = await fetch(DATABASE_URL, {
-                        method: 'POST',
-                        headers: {
-                            'x-apikey': API_KEY,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(batch)  // 传递数组
-                    });
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`批量插入失败：${response.status} ${errorText}`);
-                    }
-                    // 等待避免触发频率限制
-                    await new Promise(resolve => setTimeout(resolve, 300));
-                }
-
-                localStorage.setItem('kk_cloud_cache', JSON.stringify(photos));
-                if (statusEl) {
-                    statusEl.textContent = '✅ 已同步到云端';
-                    statusEl.className = 'save-status saved';
-                }
-                return true;
-            } catch (error) {
-                console.error('保存到云端失败', error);
-                if (statusEl) {
-                    statusEl.textContent = '❌ 保存失败，请检查网络或密钥';
-                    statusEl.className = 'save-status error';
-                }
-                // 抛出错误，让上层处理
-                throw error;
-            }
+        function saveLocalData() {
+            localStorage.setItem('kk_photos', JSON.stringify(photos));
+            localStorage.setItem('kk_countries', JSON.stringify(countries));
+            localStorage.setItem('kk_cities', JSON.stringify(cities));
         }
 
-        // ================================================================
-        //  数据缓存（在内存中）
-        // ================================================================
-        let photos = [];
-
-        async function initData() {
-            try {
-                photos = await loadFromCloud();
-            } catch (e) {
-                // 如果加载失败，使用默认数据
-                photos = DEFAULT_PHOTOS.slice();
-                // 尝试写入默认数据
-                try {
-                    await saveToCloud(photos);
-                } catch (err) {
-                    console.warn('初次写入默认数据失败', err);
-                }
-            }
-            syncCategories();
-            renderAll();
-            window._highlighted = false;
-            setTimeout(() => {
-                window._highlighted = false;
-                randomHighlightAndScroll();
-            }, 500);
-        }
-
+        // ---- 获取合并后的国家/城市（包含预定义和照片中出现） ----
         function getCountries() {
-            const set = new Set();
-            photos.forEach(p => set.add(p.country));
-            return Array.from(set).sort();
+            const fromPhotos = new Set(photos.map(p => p.country));
+            const combined = new Set([...countries, ...fromPhotos]);
+            return Array.from(combined).sort();
         }
 
         function getCities() {
-            const set = new Set();
-            photos.forEach(p => set.add(p.city));
-            return Array.from(set).sort();
+            const fromPhotos = photos.map(p => ({ country: p.country, city: p.city }));
+            const combined = new Set();
+            [...cities, ...fromPhotos].forEach(item => combined.add(JSON.stringify(item)));
+            return Array.from(combined).map(s => JSON.parse(s));
         }
 
         function getCitiesByCountry(country) {
-            const set = new Set();
-            photos.filter(p => p.country === country).forEach(p => set.add(p.city));
-            return Array.from(set).sort();
+            const all = getCities();
+            return all.filter(c => c.country === country).map(c => c.city).sort();
         }
 
-        function syncCategories() {
-            const countries = getCountries();
-            localStorage.setItem('kk_countries', JSON.stringify(countries));
-            const citySet = new Set();
-            photos.forEach(p => citySet.add(JSON.stringify({ country: p.country, city: p.city })));
-            const cityList = Array.from(citySet).map(s => JSON.parse(s));
-            localStorage.setItem('kk_cities', JSON.stringify(cityList));
-        }
-
-        function loadCountries() {
-            const stored = localStorage.getItem('kk_countries');
-            if (stored) {
-                try { return JSON.parse(stored); } catch(e) {}
-            }
-            return getCountries();
-        }
-
-        function loadCities() {
-            const stored = localStorage.getItem('kk_cities');
-            if (stored) {
-                try { return JSON.parse(stored); } catch(e) {}
-            }
-            return photos.map(p => ({ country: p.country, city: p.city }));
-        }
-
-        // ---- 操作函数 ----
+        // ---- 增删改操作 ----
         function addPhoto(country, city, imageData) {
             const newId = photos.length ? Math.max(...photos.map(p => p.id)) + 1 : 1;
-            photos.push({ id: newId, country: country.trim(), city: city.trim(), image: imageData });
-            saveAndRefresh();
+            photos.push({ id: newId, country, city, image: imageData });
+            saveLocalData();
+            syncToCloud(); // 异步同步
+            refreshAllUI();
         }
 
         function updatePhoto(id, country, city, imageData) {
             const idx = photos.findIndex(p => p.id === id);
             if (idx === -1) return;
-            const updated = { ...photos[idx] };
-            if (country) updated.country = country.trim();
-            if (city) updated.city = city.trim();
+            const updated = { ...photos[idx], country, city };
             if (imageData) updated.image = imageData;
             photos[idx] = updated;
-            saveAndRefresh();
+            saveLocalData();
+            syncToCloud();
+            refreshAllUI();
         }
 
         function deletePhoto(id) {
             photos = photos.filter(p => p.id !== id);
-            saveAndRefresh();
+            saveLocalData();
+            syncToCloud();
+            refreshAllUI();
             if (currentPhotoId === id) closeModal();
         }
 
+        function addCountry(name) {
+            if (countries.includes(name)) return;
+            countries.push(name);
+            countries.sort();
+            saveLocalData();
+            refreshAllUI();
+        }
+
         function deleteCountry(name) {
-            photos = photos.filter(p => p.country !== name);
-            saveAndRefresh();
-            if (currentFilter === name) currentFilter = 'all';
-            if (currentPhotoId && !photos.some(p => p.id === currentPhotoId)) closeModal();
+            countries = countries.filter(c => c !== name);
+            // 删除该国家的所有城市
+            cities = cities.filter(c => c.country !== name);
+            saveLocalData();
+            refreshAllUI();
+        }
+
+        function addCity(country, city) {
+            if (cities.some(c => c.country === country && c.city === city)) return;
+            cities.push({ country, city });
+            cities.sort((a, b) => a.country.localeCompare(b.country) || a.city.localeCompare(b.city));
+            saveLocalData();
+            refreshAllUI();
         }
 
         function deleteCity(country, city) {
-            photos = photos.filter(p => !(p.country === country && p.city === city));
-            saveAndRefresh();
-            if (currentFilter === city) currentFilter = 'all';
-            if (currentPhotoId && !photos.some(p => p.id === currentPhotoId)) closeModal();
+            cities = cities.filter(c => !(c.country === country && c.city === city));
+            saveLocalData();
+            refreshAllUI();
         }
 
         function resetToDefault() {
-            if (confirm('将恢复默认示例照片，当前数据将被覆盖，确定吗？')) {
+            if (confirm('将恢复默认示例数据，当前数据将被覆盖，确定吗？')) {
                 photos = DEFAULT_PHOTOS.slice();
-                saveAndRefresh();
+                countries = DEFAULT_COUNTRIES.slice();
+                cities = DEFAULT_CITIES.slice();
+                saveLocalData();
+                syncToCloud();
+                refreshAllUI();
                 closeModal();
             }
         }
 
-        async function saveAndRefresh() {
+        // ---- 云端同步（异步） ----
+        async function syncToCloud() {
+            const statusEl = document.getElementById('saveStatus');
+            if (statusEl) {
+                statusEl.textContent = '⏳ 正在同步云端...';
+                statusEl.className = 'save-status saving';
+            }
             try {
-                await saveToCloud(photos);
-                syncCategories();
-                renderAll();
+                // 获取现有记录
+                const listRes = await fetch(DATABASE_URL, {
+                    headers: { 'x-apikey': API_KEY, 'Content-Type': 'application/json' }
+                });
+                if (!listRes.ok) throw new Error('读取云端列表失败');
+                const existing = await listRes.json();
+                const existingIds = existing.map(r => r._id);
+
+                // 删除所有
+                for (const id of existingIds) {
+                    await fetch(`${DATABASE_URL}/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'x-apikey': API_KEY }
+                    });
+                }
+
+                // 批量插入
+                const uploadData = photos.map(p => ({
+                    country: p.country,
+                    city: p.city,
+                    image: p.image
+                }));
+                const batchSize = 10;
+                for (let i = 0; i < uploadData.length; i += batchSize) {
+                    const batch = uploadData.slice(i, i + batchSize);
+                    const resp = await fetch(DATABASE_URL, {
+                        method: 'POST',
+                        headers: {
+                            'x-apikey': API_KEY,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(batch)
+                    });
+                    if (!resp.ok) {
+                        const err = await resp.text();
+                        throw new Error(`批量插入失败 (${resp.status}): ${err}`);
+                    }
+                }
+                if (statusEl) {
+                    statusEl.textContent = '✅ 云端同步成功';
+                    statusEl.className = 'save-status saved';
+                }
             } catch (error) {
-                alert('数据保存到云端失败，请检查网络或密钥。本地修改未同步。');
-                renderAll();
+                console.warn('云端同步失败，本地数据不受影响', error);
+                if (statusEl) {
+                    statusEl.textContent = '⚠️ 云端同步失败，数据仅保存在本地';
+                    statusEl.className = 'save-status error';
+                }
+            }
+        }
+
+        // ---- 从云端加载（初始化时） ----
+        async function loadFromCloud() {
+            try {
+                const res = await fetch(DATABASE_URL, {
+                    headers: { 'x-apikey': API_KEY, 'Content-Type': 'application/json' }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        const cloudPhotos = data.map(record => ({
+                            id: record._id || Math.random().toString(36).substr(2, 9),
+                            country: record.country || '',
+                            city: record.city || '',
+                            image: record.image || ''
+                        })).filter(p => p.country && p.city && p.image);
+                        if (cloudPhotos.length > 0) {
+                            // 如果本地没有数据，则使用云端；否则保留本地（本地优先）
+                            if (photos.length === 0) {
+                                photos = cloudPhotos;
+                                saveLocalData();
+                            }
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('云端加载失败，使用本地数据', e);
             }
         }
 
         // ================================================================
-        //  UI 渲染
+        //  UI 渲染（所有界面）
         // ================================================================
         let currentFilter = 'all';
         let currentPhotoId = null;
         let isPolaroidOpen = false;
+        let isAuthorized = false;
 
+        // DOM 引用
         const gallery = document.getElementById('gallery');
         const cityFilter = document.getElementById('cityFilter');
         const modalOverlay = document.getElementById('modalOverlay');
@@ -1137,8 +1111,8 @@
         const authPassword = document.getElementById('authPassword');
         const authSubmitBtn = document.getElementById('authSubmitBtn');
         const authError = document.getElementById('authError');
-        let isAuthorized = false;
 
+        // ---- 密码验证 ----
         function showAuth() {
             adminAuth.style.display = 'flex';
             adminContent.classList.remove('visible');
@@ -1165,6 +1139,7 @@
         authPassword.addEventListener('keydown', e => { if (e.key === 'Enter') authorize(); });
         authSubmitBtn.addEventListener('click', authorize);
 
+        // ---- 渲染主网格 ----
         function renderGalleryView(city, searchTerm = '') {
             let filtered = city === 'all' ? photos : photos.filter(p => p.city === city);
             if (searchTerm) {
@@ -1227,13 +1202,18 @@
             setTimeout(() => target.classList.remove('highlight'), 3800);
         }
 
+        // ---- 渲染城市按钮 ----
         function renderCityButtons() {
-            const cities = getCities();
+            const citiesList = getCountries(); // 国家用于导航？不对，导航是城市名称列表，但之前我们用城市名作为分类。实际上用户要求按城市分类，所以我们用城市名列表。
+            // 但我们需要获取所有城市名（去重）
+            const allCities = new Set(photos.map(p => p.city));
+            const cityNames = Array.from(allCities).sort();
+
             const allBtn = cityFilter.querySelector('.all-btn');
             if (!allBtn) return;
             cityFilter.querySelectorAll('.city-btn:not(.all-btn)').forEach(btn => btn.remove());
 
-            cities.forEach(city => {
+            cityNames.forEach(city => {
                 const btn = document.createElement('button');
                 btn.className = 'city-btn';
                 btn.dataset.city = city;
@@ -1260,6 +1240,7 @@
             targetBtn.classList.add('active');
         }
 
+        // ---- 模态框 ----
         function openModal(id) {
             const photo = photos.find(p => p.id === id);
             if (!photo) return;
@@ -1312,6 +1293,7 @@
             isPolaroidOpen = true;
         }
 
+        // ---- 管理面板数据 ----
         function renderAdminData() {
             if (!isAuthorized) return;
             renderAdminList();
@@ -1362,13 +1344,13 @@
         }
 
         function renderCountryAdminList() {
-            const countries = getCountries();
-            if (countries.length === 0) {
+            const list = getCountries();
+            if (list.length === 0) {
                 countryListAdmin.innerHTML = `<div style="color:#666;font-size:13px;padding:4px 0;">暂无国家</div>`;
                 return;
             }
             let html = '';
-            countries.forEach(country => {
+            list.forEach(country => {
                 const count = photos.filter(p => p.country === country).length;
                 html += `
                     <div class="cat-item">
@@ -1391,18 +1373,15 @@
         }
 
         function renderCityAdminList() {
-            const cities = photos.map(p => ({ country: p.country, city: p.city }));
-            const citySet = new Set();
-            cities.forEach(c => citySet.add(JSON.stringify(c)));
-            const cityList = Array.from(citySet).map(s => JSON.parse(s));
-            if (cityList.length === 0) {
+            const list = getCities();
+            if (list.length === 0) {
                 cityListAdmin.innerHTML = `<div style="color:#666;font-size:13px;padding:4px 0;">暂无城市</div>`;
                 return;
             }
             let html = '';
             const countries = getCountries();
             countries.forEach(country => {
-                const citiesInCountry = cityList.filter(c => c.country === country);
+                const citiesInCountry = list.filter(c => c.country === country);
                 if (citiesInCountry.length === 0) return;
                 html += `<div style="margin-top:4px;color:#888;font-size:12px;">${country}</div>`;
                 citiesInCountry.forEach(c => {
@@ -1428,6 +1407,7 @@
             });
         }
 
+        // ---- 表单下拉 ----
         function populateFormSelects(selectedCountry, selectedCity) {
             const countries = getCountries();
             formCountry.innerHTML = `<option value="">— 选择国家 —</option>`;
@@ -1469,6 +1449,7 @@
             }
         }
 
+        // ---- 编辑表单 ----
         let editingId = null;
 
         function openEditForm(id) {
@@ -1545,15 +1526,18 @@
             reader.readAsDataURL(file);
         }
 
+        // ---- 添加国家/城市（UI触发） ----
         function addCountryHandler() {
             if (!isAuthorized) return;
             const name = newCountryInput.value.trim();
             if (!name) return alert('请输入国家名称');
-            if (getCountries().includes(name)) return alert('国家已存在');
-            alert(`国家“${name}”已在系统中，你可以通过添加照片来使用它。`);
+            if (countries.includes(name)) return alert('国家已存在');
+            addCountry(name);
             newCountryInput.value = '';
             populateCountrySelect();
             renderCountryAdminList();
+            // 更新表单下拉
+            populateFormSelects(name, '');
         }
 
         function addCityHandler() {
@@ -1562,21 +1546,23 @@
             const cityName = newCityInput.value.trim();
             if (!country) return alert('请选择国家');
             if (!cityName) return alert('请输入城市名称');
-            if (photos.some(p => p.country === country && p.city === cityName)) {
+            if (cities.some(c => c.country === country && c.city === cityName)) {
                 return alert('该城市已存在');
             }
-            alert(`城市“${cityName}”（${country}）已添加，你可以通过添加照片来使用它。`);
+            addCity(country, cityName);
             newCityInput.value = '';
             renderCityAdminList();
             populateFormSelects(country, cityName);
         }
 
-        function renderAll() {
+        // ---- 统一刷新UI ----
+        function refreshAllUI() {
             renderCityButtons();
             renderGalleryView(currentFilter, searchInput.value.trim());
             if (isAuthorized) {
                 renderAdminData();
             }
+            // 更新保存状态（如果同步成功，状态已经更新）
         }
 
         // ================================================================
@@ -1650,15 +1636,36 @@
         });
 
         // ================================================================
-        //  启动
+        //  初始化
         // ================================================================
         async function init() {
-            await initData();
+            loadLocalData();
+            // 尝试从云端加载（如果本地无数据）
+            if (photos.length === 0) {
+                await loadFromCloud();
+                // 重新加载本地（因为 loadFromCloud 可能修改了 photos）
+                loadLocalData();
+            }
+            // 确保国家/城市列表至少包含照片中的
+            // 但我们已经合并了，所以不需要额外操作。
+            refreshAllUI();
             showAuth();
-            console.log('✨ kk的摄影 已加载 (RestDB 同步)');
-            console.log('📸 照片总数:', photos.length);
+            // 状态提示
+            const statusEl = document.getElementById('saveStatus');
+            if (statusEl) {
+                statusEl.textContent = '✅ 数据已就绪';
+                statusEl.className = 'save-status saved';
+            }
+            // 随机高亮
+            window._highlighted = false;
+            setTimeout(() => {
+                window._highlighted = false;
+                randomHighlightAndScroll();
+            }, 500);
+            console.log('✨ kk的摄影 已加载（本地存储+云端备份）');
+            console.log('📸 照片数:', photos.length);
             console.log('🏛️ 国家:', getCountries().join(', '));
-            console.log('🔒 管理密码: kst2142600396');
+            console.log('🔒 管理密码:', ADMIN_PASSWORD);
         }
 
         init();

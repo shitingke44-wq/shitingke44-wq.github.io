@@ -812,9 +812,9 @@
 
     <script>
         // ================================================================
-        // 🔑 配置区 —— RestDB.io（已填入你的信息）
+        // 🔑 配置区 —— 使用 Full Access API Key（完整读写权限）
         // ================================================================
-        const API_KEY = 'a6bd49885ff7aa20699af87d7b38c591bb1ef';   // Server API Key（全权限）
+        const API_KEY = 'a6bd49885ff7aa20699af87d7b38c591bb1ef';
         const DATABASE_URL = 'https://kkphoto-c6a6.restdb.io/rest/photos';
         // ================================================================
 
@@ -958,7 +958,8 @@
                     statusEl.textContent = '❌ 保存失败，请检查网络或密钥';
                     statusEl.className = 'save-status error';
                 }
-                return false;
+                // 抛出错误，让上层处理
+                throw error;
             }
         }
 
@@ -968,7 +969,18 @@
         let photos = [];
 
         async function initData() {
-            photos = await loadFromCloud();
+            try {
+                photos = await loadFromCloud();
+            } catch (e) {
+                // 如果加载失败，使用默认数据
+                photos = DEFAULT_PHOTOS.slice();
+                // 尝试写入默认数据
+                try {
+                    await saveToCloud(photos);
+                } catch (err) {
+                    console.warn('初次写入默认数据失败', err);
+                }
+            }
             syncCategories();
             renderAll();
             window._highlighted = false;
@@ -1068,11 +1080,11 @@
         }
 
         async function saveAndRefresh() {
-            const success = await saveToCloud(photos);
-            if (success) {
+            try {
+                await saveToCloud(photos);
                 syncCategories();
                 renderAll();
-            } else {
+            } catch (error) {
                 alert('数据保存到云端失败，请检查网络或密钥。本地修改未同步。');
                 renderAll();
             }

@@ -368,11 +368,6 @@
             font-size: 14px;
             color: #888;
         }
-        .modal-footer .info .location {
-            font-size: 14px;
-            color: #d4a574;
-            font-weight: 500;
-        }
         .modal-footer .actions {
             display: flex;
             gap: 12px;
@@ -451,12 +446,6 @@
         .polaroid-fullscreen .polaroid-frame .polaroid-caption .p-city {
             color: #8a7a6a;
             font-size: 15px;
-        }
-        .polaroid-fullscreen .polaroid-frame .polaroid-caption .p-location {
-            color: #aaa;
-            font-size: 13px;
-            margin-top: 4px;
-            font-style: italic;
         }
         .polaroid-fullscreen .polaroid-close {
             position: absolute;
@@ -844,7 +833,6 @@
                 <div class="info">
                     <span class="title" id="modalTitle">标题</span>
                     <span class="city" id="modalCity">国家 · 城市</span>
-                    <span class="location" id="modalLocation">地点</span>
                 </div>
                 <div class="actions">
                     <button class="printer-btn" id="modalPrinterBtn"><i class="fas fa-print"></i> 拍立得</button>
@@ -863,7 +851,6 @@
             <div class="polaroid-caption">
                 <div class="p-title" id="polaroidTitle">标题</div>
                 <div class="p-city" id="polaroidCity">城市</div>
-                <div class="p-location" id="polaroidLocation">地点</div>
             </div>
         </div>
     </div>
@@ -906,10 +893,6 @@
                     <label>城市</label>
                     <select id="formCity"><option value="">— 请先选择国家 —</option></select>
                 </div>
-                <div class="form-row">
-                    <label>拍摄地点（可选）</label>
-                    <input type="text" id="formLocation" placeholder="例如：香港／西营盘中山纪念公园（可选）" />
-                </div>
                 <div class="form-actions">
                     <button class="save-btn" id="formSaveBtn">保存</button>
                     <button class="cancel-btn" id="formCancelBtn">取消</button>
@@ -944,10 +927,10 @@
         // ================================================================
         //  🔑 配置（Supabase + Cloudinary）
         // ================================================================
-        const SUPABASE_URL = 'https://reugwylbgeqagochuaov.supabase.co/rest/v1/';
-        const SUPABASE_KEY = 'sb_publishable_LFpL3nbjs6_bbF-G513fSA_knAxjO_L';
-        const CLOUD_NAME = 'e33jixhq';
-        const UPLOAD_PRESET = 'my_website';
+        const SUPABASE_URL = 'https://kmotdlbyadsfvoqeyosu.supabase.co/rest/v1/';
+        const SUPABASE_KEY = 'sb_publishable_ja7rUD-fbI0XyC_qPbWajQ_vozvfZmD';
+        const CLOUD_NAME = 'e33jixhq';   // 请替换为您的 Cloudinary cloud name
+        const UPLOAD_PRESET = 'my_website'; // 请替换为您的 Cloudinary upload preset
 
         const ADMIN_PASSWORD = 'kst2142600396';
 
@@ -958,189 +941,163 @@
         const COUNTRY_KEY = 'kk_countries_list';
         const CITY_KEY = 'kk_cities_list';
 
-        // 默认示例数据（包含 location 字段）
+        // 默认示例数据（不含 location）
         const DEFAULT_PHOTOS = [{
             id: 1,
             title: '故宫的晨光',
             country: '中国',
             city: '北京',
-            location: '故宫博物院',
-            image: 'https://picsum.photos/seed/beijing1/800/600'
+            image_url: 'https://picsum.photos/seed/beijing1/800/600'
         }, {
             id: 2,
             title: '胡同里的猫',
             country: '中国',
             city: '北京',
-            location: '南锣鼓巷',
-            image: 'https://picsum.photos/seed/beijing2/800/600'
+            image_url: 'https://picsum.photos/seed/beijing2/800/600'
         }, {
             id: 3,
             title: '国贸日落',
             country: '中国',
             city: '北京',
-            location: '国贸CBD',
-            image: 'https://picsum.photos/seed/beijing3/800/600'
+            image_url: 'https://picsum.photos/seed/beijing3/800/600'
         }, {
             id: 4,
             title: '后海夜色',
             country: '中国',
             city: '北京',
-            location: '后海',
-            image: 'https://picsum.photos/seed/beijing4/800/600'
+            image_url: 'https://picsum.photos/seed/beijing4/800/600'
         }, {
             id: 5,
             title: '外滩风云',
             country: '中国',
             city: '上海',
-            location: '外滩',
-            image: 'https://picsum.photos/seed/shanghai1/800/600'
+            image_url: 'https://picsum.photos/seed/shanghai1/800/600'
         }, {
             id: 6,
             title: '弄堂光影',
             country: '中国',
             city: '上海',
-            location: '田子坊',
-            image: 'https://picsum.photos/seed/shanghai2/800/600'
+            image_url: 'https://picsum.photos/seed/shanghai2/800/600'
         }, {
             id: 7,
             title: '陆家嘴之夜',
             country: '中国',
             city: '上海',
-            location: '陆家嘴',
-            image: 'https://picsum.photos/seed/shanghai3/800/600'
+            image_url: 'https://picsum.photos/seed/shanghai3/800/600'
         }, {
             id: 8,
             title: '武康路转角',
             country: '中国',
             city: '上海',
-            location: '武康路',
-            image: 'https://picsum.photos/seed/shanghai4/800/600'
+            image_url: 'https://picsum.photos/seed/shanghai4/800/600'
         }, {
             id: 9,
             title: '珠江漫步',
             country: '中国',
             city: '广州',
-            location: '珠江边',
-            image: 'https://picsum.photos/seed/guangzhou1/800/600'
+            image_url: 'https://picsum.photos/seed/guangzhou1/800/600'
         }, {
             id: 10,
             title: '沙面老建筑',
             country: '中国',
             city: '广州',
-            location: '沙面岛',
-            image: 'https://picsum.photos/seed/guangzhou2/800/600'
+            image_url: 'https://picsum.photos/seed/guangzhou2/800/600'
         }, {
             id: 11,
             title: '广州塔云端',
             country: '中国',
             city: '广州',
-            location: '广州塔',
-            image: 'https://picsum.photos/seed/guangzhou3/800/600'
+            image_url: 'https://picsum.photos/seed/guangzhou3/800/600'
         }, {
             id: 12,
             title: '深圳湾日落',
             country: '中国',
             city: '深圳',
-            location: '深圳湾公园',
-            image: 'https://picsum.photos/seed/shenzhen1/800/600'
+            image_url: 'https://picsum.photos/seed/shenzhen1/800/600'
         }, {
             id: 13,
             title: '华侨城创意园',
             country: '中国',
             city: '深圳',
-            location: '华侨城创意文化园',
-            image: 'https://picsum.photos/seed/shenzhen2/800/600'
+            image_url: 'https://picsum.photos/seed/shenzhen2/800/600'
         }, {
             id: 14,
             title: '梧桐山远眺',
             country: '中国',
             city: '深圳',
-            location: '梧桐山',
-            image: 'https://picsum.photos/seed/shenzhen3/800/600'
+            image_url: 'https://picsum.photos/seed/shenzhen3/800/600'
         }, {
             id: 15,
             title: '西湖晨雾',
             country: '中国',
             city: '杭州',
-            location: '西湖',
-            image: 'https://picsum.photos/seed/hangzhou1/800/600'
+            image_url: 'https://picsum.photos/seed/hangzhou1/800/600'
         }, {
             id: 16,
             title: '断桥残雪',
             country: '中国',
             city: '杭州',
-            location: '断桥',
-            image: 'https://picsum.photos/seed/hangzhou2/800/600'
+            image_url: 'https://picsum.photos/seed/hangzhou2/800/600'
         }, {
             id: 17,
             title: '龙井茶园',
             country: '中国',
             city: '杭州',
-            location: '龙井村',
-            image: 'https://picsum.photos/seed/hangzhou3/800/600'
+            image_url: 'https://picsum.photos/seed/hangzhou3/800/600'
         }, {
             id: 18,
             title: '宽窄巷子',
             country: '中国',
             city: '成都',
-            location: '宽窄巷子',
-            image: 'https://picsum.photos/seed/chengdu1/800/600'
+            image_url: 'https://picsum.photos/seed/chengdu1/800/600'
         }, {
             id: 19,
             title: '锦里夜色',
             country: '中国',
             city: '成都',
-            location: '锦里',
-            image: 'https://picsum.photos/seed/chengdu2/800/600'
+            image_url: 'https://picsum.photos/seed/chengdu2/800/600'
         }, {
             id: 20,
             title: '大熊猫基地',
             country: '中国',
             city: '成都',
-            location: '大熊猫繁育研究基地',
-            image: 'https://picsum.photos/seed/chengdu3/800/600'
+            image_url: 'https://picsum.photos/seed/chengdu3/800/600'
         }, {
             id: 21,
             title: '洪崖洞夜景',
             country: '中国',
             city: '重庆',
-            location: '洪崖洞',
-            image: 'https://picsum.photos/seed/chongqing1/800/600'
+            image_url: 'https://picsum.photos/seed/chongqing1/800/600'
         }, {
             id: 22,
             title: '山城步道',
             country: '中国',
             city: '重庆',
-            location: '山城第三步道',
-            image: 'https://picsum.photos/seed/chongqing2/800/600'
+            image_url: 'https://picsum.photos/seed/chongqing2/800/600'
         }, {
             id: 23,
             title: '长江索道',
             country: '中国',
             city: '重庆',
-            location: '长江索道',
-            image: 'https://picsum.photos/seed/chongqing3/800/600'
+            image_url: 'https://picsum.photos/seed/chongqing3/800/600'
         }, {
             id: 24,
             title: '钟楼暮色',
             country: '中国',
             city: '西安',
-            location: '钟楼',
-            image: 'https://picsum.photos/seed/xian1/800/600'
+            image_url: 'https://picsum.photos/seed/xian1/800/600'
         }, {
             id: 25,
             title: '城墙根下',
             country: '中国',
             city: '西安',
-            location: '西安城墙',
-            image: 'https://picsum.photos/seed/xian2/800/600'
+            image_url: 'https://picsum.photos/seed/xian2/800/600'
         }, {
             id: 26,
             title: '大唐不夜城',
             country: '中国',
             city: '西安',
-            location: '大唐不夜城',
-            image: 'https://picsum.photos/seed/xian3/800/600'
+            image_url: 'https://picsum.photos/seed/xian3/800/600'
         }];
         const DEFAULT_COUNTRIES = ['中国'];
         const DEFAULT_CITIES = [{ country: '中国', city: '北京' }, { country: '中国', city: '上海' }, { country: '中国', city: '广州' },
@@ -1157,7 +1114,7 @@
                     if (Array.isArray(data) && data.length) return data;
                 } catch (e) {}
             }
-            return null; // 明确返回 null 表示无本地缓存
+            return null;
         }
 
         function savePhotos(photos) {
@@ -1222,7 +1179,6 @@
             photos = loadPhotos() || [];
             countries = loadCountries() || [];
             cities = loadCities() || [];
-            // 如果本地没有数据，使用默认
             if (photos.length === 0) {
                 photos = DEFAULT_PHOTOS.slice();
                 const cats = rebuildCategories(photos);
@@ -1251,21 +1207,17 @@
                 if (!res.ok) throw new Error(`读取云端失败 (${res.status})`);
                 const data = await res.json();
                 if (data.length > 0) {
-                    // 将云端数据转换为本地格式
                     const cloudPhotos = data.map(record => ({
                         id: record.id,
                         title: record.title || '',
                         country: record.country || '',
                         city: record.city || '',
-                        location: record.location || '',
-                        image: record.image || ''
+                        image_url: record.image_url || ''
                     }));
-                    // 覆盖本地存储
                     savePhotos(cloudPhotos);
                     const cats = rebuildCategories(cloudPhotos);
                     saveCountries(cats.countries);
                     saveCities(cats.cities);
-                    // 更新内存变量
                     photos = cloudPhotos;
                     countries = cats.countries;
                     cities = cats.cities;
@@ -1275,7 +1227,7 @@
                     }
                     return true;
                 } else {
-                    // 云端无数据，将本地默认数据上传
+                    // 云端无数据，上传默认
                     const cats = rebuildCategories(DEFAULT_PHOTOS);
                     savePhotos(DEFAULT_PHOTOS);
                     saveCountries(cats.countries);
@@ -1296,13 +1248,12 @@
                     statusEl.textContent = '⚠️ 云端加载失败，使用本地数据';
                     statusEl.style.color = '#e05a5a';
                 }
-                // 回退到本地
                 loadAllData();
                 return false;
             }
         }
 
-        // ---- 同步到 Supabase（增强版，不包含 id） ----
+        // ---- 同步到 Supabase（不包含 id，让数据库自动生成） ----
         async function syncToSupabase(photosToSync) {
             const statusEl = document.getElementById('syncStatus');
             if (statusEl) {
@@ -1310,14 +1261,14 @@
                 statusEl.style.color = '#d4a574';
             }
             try {
-                // 1. 获取所有现有记录
+                // 1. 获取现有记录
                 const listRes = await fetch(`${SUPABASE_URL}photos?select=id`, {
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
                 });
                 if (!listRes.ok) throw new Error(`获取云端列表失败 (${listRes.status})`);
                 const existing = await listRes.json();
 
-                // 2. 删除所有记录（逐条删除，确保清除）
+                // 2. 删除所有记录（逐条删除）
                 for (const item of existing) {
                     const delRes = await fetch(`${SUPABASE_URL}photos?id=eq.${item.id}`, {
                         method: 'DELETE',
@@ -1328,13 +1279,12 @@
                     }
                 }
 
-                // 3. 批量插入新数据（⚠️ 不包含 id 字段，让数据库自动生成）
+                // 3. 批量插入新数据（不包含 id）
                 const dataToInsert = photosToSync.map(p => ({
                     title: p.title || '',
                     country: p.country || '',
                     city: p.city || '',
-                    location: p.location || '',
-                    image: p.image || ''
+                    image_url: p.image_url || ''
                 }));
                 for (const p of dataToInsert) {
                     const postRes = await fetch(`${SUPABASE_URL}photos`, {
@@ -1366,8 +1316,7 @@
                     title: record.title || '',
                     country: record.country || '',
                     city: record.city || '',
-                    location: record.location || '',
-                    image: record.image || ''
+                    image_url: record.image_url || ''
                 }));
 
                 // 5. 更新本地缓存
@@ -1458,7 +1407,7 @@
                 return;
             }
             slidesContainer.innerHTML = carouselPhotos.map((p, i) =>
-                `<div class="slide"><img src="${p.image}" alt="${p.title}" /></div>`
+                `<div class="slide"><img src="${p.image_url}" alt="${p.title}" /></div>`
             ).join('');
             dotsContainer.innerHTML = carouselPhotos.map((_, i) =>
                 `<span class="${i===0?'active':''}" data-index="${i}"></span>`
@@ -1508,7 +1457,6 @@
             const filterSection = document.getElementById('filterSection');
             const grid = document.getElementById('photoGrid');
 
-            // 从当前 photos 中提取国家
             const countrySet = new Set(photos.map(p => p.country));
             const countryList = Array.from(countrySet).sort();
 
@@ -1577,7 +1525,7 @@
             }
             grid.innerHTML = photosToShow.map(p => `
                 <div class="grid-item" data-id="${p.id}">
-                    <img src="${p.image}" alt="${p.title}" loading="lazy" />
+                    <img src="${p.image_url}" alt="${p.title}" loading="lazy" />
                     <div class="overlay">
                         <div class="title">${p.title}</div>
                         <div class="city">${p.country} · ${p.city}</div>
@@ -1597,10 +1545,9 @@
         function openPhotoModal(id) {
             const photo = photos.find(p => p.id === id);
             if (!photo) return;
-            document.getElementById('modalImage').src = photo.image;
+            document.getElementById('modalImage').src = photo.image_url;
             document.getElementById('modalTitle').textContent = photo.title || '';
             document.getElementById('modalCity').textContent = `${photo.country} · ${photo.city}`;
-            document.getElementById('modalLocation').textContent = photo.location || '';
             document.getElementById('photoModal').classList.add('active');
             document.getElementById('photoModal').dataset.photoId = photo.id;
             document.body.style.overflow = 'hidden';
@@ -1628,10 +1575,9 @@
 
         // ---- 拍立得 ----
         function showPolaroid(photo) {
-            document.getElementById('polaroidImg').src = photo.image;
+            document.getElementById('polaroidImg').src = photo.image_url;
             document.getElementById('polaroidTitle').textContent = photo.title || '';
             document.getElementById('polaroidCity').textContent = `${photo.country} · ${photo.city}`;
-            document.getElementById('polaroidLocation').textContent = photo.location || '';
             document.getElementById('polaroidFullscreen').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
@@ -1718,7 +1664,7 @@
             }
             list.innerHTML = photos.map(p => `
                 <div class="photo-item" data-id="${p.id}">
-                    <img class="thumb" src="${p.image}" alt="${p.title}" />
+                    <img class="thumb" src="${p.image_url}" alt="${p.title}" />
                     <div class="info">
                         <div class="item-title">${p.title}</div>
                         <div class="item-city">${p.country} · ${p.city}</div>
@@ -1808,41 +1754,35 @@
         }
 
         // ---- CRUD 操作 ----
-        function addPhoto(title, country, city, location, imageUrl) {
-            // 不再手动生成 id，用 0 作为临时占位
+        function addPhoto(title, country, city, imageUrl) {
             const newPhoto = {
                 id: 0,  // 临时占位，同步后会被云端生成的真实 id 替换
                 title: title || '',
                 country: country.trim(),
                 city: city.trim(),
-                location: location || '',
-                image: imageUrl
+                image_url: imageUrl
             };
             photos.push(newPhoto);
-            // 更新分类
             const cats = rebuildCategories(photos);
             countries = cats.countries;
             cities = cats.cities;
-            // 保存本地
             savePhotos(photos);
             saveCountries(countries);
             saveCities(cities);
-            // 同步云端，完成后会自动拉取最新数据（包含数据库生成的 id）
             syncToSupabase(photos).then(() => {
                 refreshAll();
             });
             refreshAll();
         }
 
-        function updatePhoto(id, title, country, city, location, imageUrl) {
+        function updatePhoto(id, title, country, city, imageUrl) {
             const idx = photos.findIndex(p => p.id === id);
             if (idx === -1) return;
             const updated = { ...photos[idx] };
             updated.title = title || '';
             updated.country = country.trim();
             updated.city = city.trim();
-            updated.location = location || '';
-            if (imageUrl) updated.image = imageUrl;
+            if (imageUrl) updated.image_url = imageUrl;
             photos[idx] = updated;
             const cats = rebuildCategories(photos);
             countries = cats.countries;
@@ -1925,8 +1865,7 @@
             const photo = photos.find(p => p.id === id);
             if (!photo) return;
             document.getElementById('formTitle').value = photo.title || '';
-            document.getElementById('formLocation').value = photo.location || '';
-            document.getElementById('formImageUrl').value = photo.image || '';
+            document.getElementById('formImageUrl').value = photo.image_url || '';
             document.getElementById('formFile').value = '';
             populateFormSelects(photo.country, photo.city);
             document.getElementById('editForm').classList.add('show');
@@ -1939,7 +1878,6 @@
             document.getElementById('formFile').value = '';
             document.getElementById('formImageUrl').value = '';
             document.getElementById('formTitle').value = '';
-            document.getElementById('formLocation').value = '';
             document.getElementById('formCountry').value = '';
             document.getElementById('formCity').innerHTML = `<option value="">— 请先选择国家 —</option>`;
         }
@@ -1949,7 +1887,6 @@
             const title = document.getElementById('formTitle').value.trim();
             const country = document.getElementById('formCountry').value;
             const city = document.getElementById('formCity').value;
-            const location = document.getElementById('formLocation').value.trim();
 
             if (!country || !city) {
                 alert('国家和城市不能为空');
@@ -1962,9 +1899,9 @@
             if (imageUrlInput && !file) {
                 if (imageUrlInput.startsWith('http')) {
                     if (editingId) {
-                        updatePhoto(editingId, title, country, city, location, imageUrlInput);
+                        updatePhoto(editingId, title, country, city, imageUrlInput);
                     } else {
-                        addPhoto(title, country, city, location, imageUrlInput);
+                        addPhoto(title, country, city, imageUrlInput);
                     }
                     closeEditForm();
                     return;
@@ -1981,9 +1918,9 @@
                 uploadToCloudinary(file)
                     .then(url => {
                         if (editingId) {
-                            updatePhoto(editingId, title, country, city, location, url);
+                            updatePhoto(editingId, title, country, city, url);
                         } else {
-                            addPhoto(title, country, city, location, url);
+                            addPhoto(title, country, city, url);
                         }
                         status.textContent = '✅ 上传成功，数据已保存';
                         status.style.color = '#6fcf97';
@@ -2082,7 +2019,6 @@
             if (!isAuthorized) return;
             editingId = null;
             document.getElementById('formTitle').value = '';
-            document.getElementById('formLocation').value = '';
             document.getElementById('formImageUrl').value = '';
             document.getElementById('formFile').value = '';
             populateFormSelects('', '');
@@ -2097,12 +2033,10 @@
 
         // ---- 刷新全部UI ----
         function refreshAll() {
-            // 更新内存变量（从存储重新加载）
             photos = loadPhotos() || [];
             countries = loadCountries() || [];
             cities = loadCities() || [];
             if (photos.length === 0) {
-                // 如果依然没有数据，使用默认
                 photos = DEFAULT_PHOTOS.slice();
                 const cats = rebuildCategories(photos);
                 countries = cats.countries;
@@ -2167,18 +2101,14 @@
         //  启动
         // ================================================================
         async function init() {
-            // 首次加载：先尝试从云端拉取
             const cloudOk = await fetchFromCloud();
             if (!cloudOk) {
-                // 如果云端失败，使用本地
                 loadAllData();
             }
-            // 确保数据加载
             photos = loadPhotos() || [];
             countries = loadCountries() || [];
             cities = loadCities() || [];
             if (photos.length === 0) {
-                // 如果依然没有数据（极端情况），用默认
                 photos = DEFAULT_PHOTOS.slice();
                 const cats = rebuildCategories(photos);
                 countries = cats.countries;

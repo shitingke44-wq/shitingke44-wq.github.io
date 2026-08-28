@@ -642,7 +642,7 @@
         .admin-panel .edit-form .form-actions .cancel-btn { background: rgba(255,255,255,0.06); color: #aaa; }
         .admin-panel .edit-form .form-actions .cancel-btn:hover { background: rgba(255,255,255,0.12); }
 
-        .save-status {
+        .sync-status {
             font-size: 13px;
             color: #6fcf97;
             padding: 4px 0;
@@ -763,7 +763,7 @@
         </div>
 
         <div class="admin-content" id="adminContent">
-            <div class="save-status" id="saveStatus">✅ 数据已保存至本地</div>
+            <div class="sync-status" id="syncStatus">✅ 已就绪</div>
 
             <div class="edit-form" id="editForm">
                 <div class="form-row">
@@ -822,8 +822,12 @@
 
     <script>
         // ================================================================
-        //  Cloudinary 配置（你的）
+        //  🔑 配置区（已填入你的 Supabase 信息）
         // ================================================================
+        const SUPABASE_URL = 'https://reugwylbgeqagochuaov.supabase.co/rest/v1/';
+        const SUPABASE_KEY = 'sb_publishable_LFpL3nbjs6_bbF-G513fSA_knAxjO_L';
+
+        // Cloudinary 配置（你的）
         const CLOUD_NAME = 'e33jixhq';
         const UPLOAD_PRESET = 'my_website';
         // ================================================================
@@ -867,13 +871,13 @@
         authSubmitBtn.addEventListener('click', authorize);
 
         // ================================================================
-        //  数据管理（localStorage）
+        //  数据管理（localStorage + Supabase 同步）
         // ================================================================
         const STORAGE_KEY = 'kk_photos_data';
         const COUNTRY_KEY = 'kk_countries_list';
         const CITY_KEY = 'kk_cities_list';
 
-        // 默认示例数据（带 Cloudinary 占位图，你也可以换成你自己的）
+        // 默认示例数据
         const DEFAULT_PHOTOS = [{
             id: 1,
             title: '故宫的晨光',
@@ -1119,6 +1123,7 @@
             let countries = loadCountries();
             countries = countries.filter(c => c !== name);
             saveCountries(countries);
+            syncToSupabase(photos);
         }
 
         function addCity(country, city) {
@@ -1138,6 +1143,7 @@
             let cities = loadCities();
             cities = cities.filter(c => !(c.country === country && c.city === city));
             saveCities(cities);
+            syncToSupabase(photos);
         }
 
         function syncCategories() {
@@ -1162,6 +1168,110 @@
         }
 
         // ================================================================
+        //  Supabase 同步函数
+        // ================================================================
+        async function syncToSupabase(photos) {
+            const statusEl = document.getElementById('syncStatus');
+            if (statusEl) {
+                statusEl.textContent = '⏳ 正在同步到云端...';
+                statusEl.style.color = '#d4a574';
+            }
+
+            try {
+                // 1. 先获取所有现有记录的 id
+                const listRes = await fetch(`${SUPABASE_URL}photos?select=id`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                if (!listRes.ok) throw new Error('获取云端列表失败');
+                const existing = await listRes.json();
+
+                // 2. 删除所有现有记录
+                for (const item of existing) {
+                    await fetch(`${SUPABASE_URL}photos?id=eq.${item.id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    });
+                }
+
+                // 3. 批量插入新数据
+                for (const p of photos) {
+                    await fetch(`${SUPABASE_URL}photos`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(p)
+                    });
+                }
+
+                if (statusEl) {
+                    statusEl.textContent = '✅ 已同步到云端';
+                    statusEl.style.color = '#6fcf97';
+                }
+            } catch (error) {
+                console.warn('Supabase 同步失败', error);
+                if (statusEl) {
+                    statusEl.textContent = '⚠️ 云端同步失败，数据仅保存在本地';
+                    statusEl.style.color = '#e05a5a';
+                }
+            }
+        }
+
+        // ---- 从 Supabase 加载（初始化时调用） ----
+        async function loadFromSupabase() {
+            const statusEl = document.getElementById('syncStatus');
+            if (statusEl) {
+                statusEl.textContent = '⏳ 正在从云端加载...';
+                statusEl.style.color = '#d4a574';
+            }
+
+            try {
+                const res = await fetch(`${SUPABASE_URL}photos?select=*`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                if (!res.ok) throw new Error('读取云端失败');
+                const data = await res.json();
+
+                if (data.length > 0) {
+                    // 用云端数据覆盖本地
+                    savePhotos(data);
+                    if (statusEl) {
+                        statusEl.textContent = '✅ 已从云端同步';
+                        statusEl.style.color = '#6fcf97';
+                    }
+                    return true;
+                } else {
+                    // 云端无数据，上传本地默认数据
+                    const localPhotos = loadPhotos();
+                    await syncToSupabase(localPhotos);
+                    if (statusEl) {
+                        statusEl.textContent = '✅ 已从云端同步';
+                        statusEl.style.color = '#6fcf97';
+                    }
+                    return true;
+                }
+            } catch (error) {
+                console.warn('云端加载失败，使用本地数据', error);
+                if (statusEl) {
+                    statusEl.textContent = '⚠️ 云端加载失败，使用本地数据';
+                    statusEl.style.color = '#e05a5a';
+                }
+                return false;
+            }
+        }
+
+        // ================================================================
         //  Cloudinary 上传函数
         // ================================================================
         function uploadToCloudinary(file) {
@@ -1169,8 +1279,6 @@
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('upload_preset', UPLOAD_PRESET);
-                // 可选：指定文件夹
-                // formData.append('folder', 'kk_photos');
 
                 fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
                     method: 'POST',
@@ -1233,7 +1341,7 @@
         const cityCountrySelect = document.getElementById('cityCountrySelect');
         const newCityInput = document.getElementById('newCityInput');
         const addCityBtn = document.getElementById('addCityBtn');
-        const saveStatus = document.getElementById('saveStatus');
+        const syncStatus = document.getElementById('syncStatus');
 
         // ---- 工具函数 ----
         function getCities(photos) {
@@ -1556,7 +1664,8 @@
             savePhotos(photos);
             syncCategories();
             refreshAll();
-            updateSaveStatus('✅ 数据已保存至本地');
+            syncToSupabase(photos);
+            updateSyncStatus('✅ 数据已保存');
         }
 
         function updatePhoto(id, title, country, city, imageUrl) {
@@ -1571,7 +1680,8 @@
             savePhotos(photos);
             syncCategories();
             refreshAll();
-            updateSaveStatus('✅ 数据已保存至本地');
+            syncToSupabase(photos);
+            updateSyncStatus('✅ 数据已保存');
         }
 
         function deletePhoto(id) {
@@ -1580,7 +1690,8 @@
             syncCategories();
             refreshAll();
             if (currentPhotoId === id) closeModal();
-            updateSaveStatus('✅ 数据已保存至本地');
+            syncToSupabase(photos);
+            updateSyncStatus('✅ 数据已保存');
         }
 
         function resetToDefault() {
@@ -1590,7 +1701,8 @@
                 syncCategories();
                 refreshAll();
                 closeModal();
-                updateSaveStatus('✅ 已恢复默认示例');
+                syncToSupabase(photos);
+                updateSyncStatus('✅ 已恢复默认示例');
             }
         }
 
@@ -1663,10 +1775,10 @@
             }
         }
 
-        function updateSaveStatus(msg) {
-            if (saveStatus) {
-                saveStatus.textContent = msg;
-                saveStatus.style.color = '#6fcf97';
+        function updateSyncStatus(msg) {
+            if (syncStatus) {
+                syncStatus.textContent = msg;
+                syncStatus.style.color = '#6fcf97';
             }
         }
 
@@ -1728,8 +1840,8 @@
 
             // 如果选择了文件，则上传到 Cloudinary
             if (file) {
-                saveStatus.textContent = '⏳ 正在上传到 Cloudinary...';
-                saveStatus.style.color = '#d4a574';
+                syncStatus.textContent = '⏳ 正在上传到 Cloudinary...';
+                syncStatus.style.color = '#d4a574';
 
                 uploadToCloudinary(file)
                     .then(url => {
@@ -1738,14 +1850,14 @@
                         } else {
                             addPhoto(title, country, city, url);
                         }
-                        saveStatus.textContent = '✅ 上传成功，数据已保存';
-                        saveStatus.style.color = '#6fcf97';
+                        syncStatus.textContent = '✅ 上传成功，数据已保存';
+                        syncStatus.style.color = '#6fcf97';
                         closeEditForm();
                     })
                     .catch(err => {
                         console.error('上传失败', err);
-                        saveStatus.textContent = '❌ 上传失败：' + err.message;
-                        saveStatus.style.color = '#e05a5a';
+                        syncStatus.textContent = '❌ 上传失败：' + err.message;
+                        syncStatus.style.color = '#e05a5a';
                         alert('照片上传失败，请检查网络或 Cloudinary 配置');
                     });
                 return;
@@ -1763,7 +1875,7 @@
             addCountry(name);
             newCountryInput.value = '';
             refreshAll();
-            updateSaveStatus('✅ 国家已添加');
+            updateSyncStatus('✅ 国家已添加');
         }
 
         function addCityHandler() {
@@ -1779,7 +1891,7 @@
             addCity(country, cityName);
             newCityInput.value = '';
             refreshAll();
-            updateSaveStatus('✅ 城市已添加');
+            updateSyncStatus('✅ 城市已添加');
         }
 
         // ---- 监听国家下拉联动 ----
@@ -1856,8 +1968,11 @@
         // ================================================================
         //  初始化
         // ================================================================
-        function init() {
+        async function init() {
             syncCategories();
+            // 尝试从 Supabase 加载
+            await loadFromSupabase();
+            // 重新加载本地（因为 loadFromSupabase 可能修改了存储）
             photos = loadPhotos();
             renderCityButtons();
             renderGallery('all');
@@ -1869,13 +1984,13 @@
                 randomHighlightAndScroll();
             }, 500);
 
-            console.log('✨ kk的摄影 已加载 (纯本地存储 + Cloudinary 上传)');
+            console.log('✨ kk的摄影 已加载 (Supabase + Cloudinary)');
             console.log('📸 照片总数:', photos.length);
             console.log('🏛️ 国家:', loadCountries().join(', '));
             console.log('🏙️ 城市:', loadCities().map(c => c.city).join(', '));
             console.log('🔒 管理密码: kst2142600396');
             console.log('☁️ Cloudinary 云名:', CLOUD_NAME);
-            updateSaveStatus('✅ 数据已就绪');
+            updateSyncStatus('✅ 已就绪');
         }
 
         init();

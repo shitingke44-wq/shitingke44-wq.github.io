@@ -336,10 +336,11 @@
             align-items: center;
             justify-content: center;
             flex: 1;
+            min-height: 0;
         }
         .modal-image-wrap img {
             width: 100%;
-            max-height: 80vh;
+            max-height: 90vh;
             object-fit: contain;
             display: block;
         }
@@ -843,7 +844,7 @@
                 <div class="info">
                     <span class="title" id="modalTitle">标题</span>
                     <span class="city" id="modalCity">国家 · 城市</span>
-                    <span class="location" id="modalLocation">📍 地点</span>
+                    <span class="location" id="modalLocation">地点</span>
                 </div>
                 <div class="actions">
                     <button class="printer-btn" id="modalPrinterBtn"><i class="fas fa-print"></i> 拍立得</button>
@@ -862,7 +863,7 @@
             <div class="polaroid-caption">
                 <div class="p-title" id="polaroidTitle">标题</div>
                 <div class="p-city" id="polaroidCity">城市</div>
-                <div class="p-location" id="polaroidLocation">📍 地点</div>
+                <div class="p-location" id="polaroidLocation">地点</div>
             </div>
         </div>
     </div>
@@ -894,8 +895,8 @@
                     <input type="text" id="formImageUrl" placeholder="https://..." />
                 </div>
                 <div class="form-row">
-                    <label>标题</label>
-                    <input type="text" id="formTitle" placeholder="输入照片标题" />
+                    <label>标题（可选）</label>
+                    <input type="text" id="formTitle" placeholder="输入照片标题（可选）" />
                 </div>
                 <div class="form-row">
                     <label>国家</label>
@@ -906,8 +907,8 @@
                     <select id="formCity"><option value="">— 请先选择国家 —</option></select>
                 </div>
                 <div class="form-row">
-                    <label>拍摄地点（Location）</label>
-                    <input type="text" id="formLocation" placeholder="例如：香港／西营盘中山纪念公园" />
+                    <label>拍摄地点（可选）</label>
+                    <input type="text" id="formLocation" placeholder="例如：香港／西营盘中山纪念公园（可选）" />
                 </div>
                 <div class="form-actions">
                     <button class="save-btn" id="formSaveBtn">保存</button>
@@ -1553,9 +1554,9 @@
             const photo = loadPhotos().find(p => p.id === id);
             if (!photo) return;
             document.getElementById('modalImage').src = photo.image;
-            document.getElementById('modalTitle').textContent = photo.title;
+            document.getElementById('modalTitle').textContent = photo.title || '';
             document.getElementById('modalCity').textContent = `${photo.country} · ${photo.city}`;
-            document.getElementById('modalLocation').textContent = photo.location ? `📍 ${photo.location}` : '';
+            document.getElementById('modalLocation').textContent = photo.location || '';
             document.getElementById('photoModal').classList.add('active');
             document.getElementById('photoModal').dataset.photoId = photo.id;
             document.body.style.overflow = 'hidden';
@@ -1586,9 +1587,9 @@
         // ================================================================
         function showPolaroid(photo) {
             document.getElementById('polaroidImg').src = photo.image;
-            document.getElementById('polaroidTitle').textContent = photo.title;
+            document.getElementById('polaroidTitle').textContent = photo.title || '';
             document.getElementById('polaroidCity').textContent = `${photo.country} · ${photo.city}`;
-            document.getElementById('polaroidLocation').textContent = photo.location ? `📍 ${photo.location}` : '';
+            document.getElementById('polaroidLocation').textContent = photo.location || '';
             document.getElementById('polaroidFullscreen').classList.add('active');
             document.body.style.overflow = 'hidden';
         }
@@ -1778,10 +1779,10 @@
             const photos = loadPhotos();
             const newPhoto = {
                 id: nextId(photos),
-                title: title.trim(),
+                title: title ? title.trim() : '',
                 country: country.trim(),
                 city: city.trim(),
-                location: location.trim(),
+                location: location ? location.trim() : '',
                 image: imageUrl
             };
             photos.push(newPhoto);
@@ -1796,10 +1797,10 @@
             const idx = photos.findIndex(p => p.id === id);
             if (idx === -1) return;
             const updated = { ...photos[idx] };
-            if (title) updated.title = title.trim();
-            if (country) updated.country = country.trim();
-            if (city) updated.city = city.trim();
-            if (location !== undefined) updated.location = location.trim();
+            updated.title = title ? title.trim() : '';
+            updated.country = country.trim();
+            updated.city = city.trim();
+            updated.location = location ? location.trim() : '';
             if (imageUrl) updated.image = imageUrl;
             photos[idx] = updated;
             savePhotos(photos);
@@ -1832,7 +1833,7 @@
             const photos = loadPhotos();
             const photo = photos.find(p => p.id === id);
             if (!photo) return;
-            document.getElementById('formTitle').value = photo.title;
+            document.getElementById('formTitle').value = photo.title || '';
             document.getElementById('formLocation').value = photo.location || '';
             document.getElementById('formImageUrl').value = photo.image || '';
             document.getElementById('formFile').value = '';
@@ -1858,8 +1859,10 @@
             const country = document.getElementById('formCountry').value;
             const city = document.getElementById('formCity').value;
             const location = document.getElementById('formLocation').value.trim();
-            if (!title || !country || !city) {
-                alert('标题、国家和城市都不能为空');
+
+            // 只验证国家和城市
+            if (!country || !city) {
+                alert('国家和城市不能为空');
                 return;
             }
 
@@ -2027,11 +2030,9 @@
             } else {
                 populateFormSelects('', '');
             }
-            // 刷新作品页（如果当前在works）
             if (document.getElementById('page-works').classList.contains('active')) {
                 renderWorks();
             }
-            // 刷新首页轮播（如果当前在home）
             if (document.getElementById('page-home').classList.contains('active')) {
                 initCarousel();
             }
@@ -2060,7 +2061,6 @@
 
         init();
 
-        // 窗口尺寸变化时重置轮播
         window.addEventListener('resize', () => {
             if (document.getElementById('page-home').classList.contains('active')) {
                 initCarousel();

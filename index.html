@@ -1046,7 +1046,7 @@
 
     <script>
         // ================================================================
-        //  完整国家列表（197个国家）
+        //  完整国家列表
         // ================================================================
         const ALL_COUNTRIES = [
             '中国', '美国', '英国', '法国', '德国', '意大利', '西班牙', '葡萄牙', '荷兰', '比利时',
@@ -1072,7 +1072,7 @@
         ];
 
         // ================================================================
-        //  中国所有省份/自治区/直辖市/特别行政区
+        //  中国所有省份
         // ================================================================
         const CHINA_STATES = [
             '北京市', '上海市', '天津市', '重庆市',
@@ -1086,7 +1086,7 @@
         ];
 
         // ================================================================
-        //  默认数据包含中国所有省份的示例照片
+        //  默认数据
         // ================================================================
         function generateDefaultPhotos() {
             const photos = [];
@@ -1099,7 +1099,6 @@
             ];
             
             let id = 1;
-            // 为每个省份生成1-2张示例照片
             CHINA_STATES.forEach(state => {
                 const city = cities[id % cities.length] || '城市';
                 photos.push({
@@ -1110,7 +1109,6 @@
                     city: city,
                     image_url: `https://picsum.photos/seed/${state}${id}/800/600`
                 });
-                // 部分省份多生成一张
                 if (id % 3 === 0) {
                     photos.push({
                         id: id++,
@@ -1497,10 +1495,6 @@
         // ---- 搜索功能 ----
         function performSearch(query) {
             searchQuery = query.toLowerCase().trim();
-            // 如果搜索框为空，清除搜索状态
-            if (!searchQuery) {
-                // 保持筛选状态，只清除搜索过滤
-            }
             renderWorks();
             updateStats();
         }
@@ -1583,7 +1577,6 @@
                     </div>
                 `;
                 
-                // 绑定事件
                 filterSection.querySelector('#backToCountries').addEventListener('click', function() {
                     selectedCountry = null;
                     selectedState = null;
@@ -1600,11 +1593,12 @@
                 
             } else {
                 // 显示国家筛选
+                const displayCountries = countryList.slice(0, 20);
                 filterSection.innerHTML = `
                     <div class="filter-group">
                         <span class="filter-label">国家：</span>
                         <button class="filter-btn ${!selectedCountry ? 'active' : ''}" data-country="all">全部</button>
-                        ${countryList.slice(0, 20).map(c => `
+                        ${displayCountries.map(c => `
                             <button class="filter-btn ${selectedCountry === c ? 'active' : ''}" data-country="${c}">${c}</button>
                         `).join('')}
                         ${countryList.length > 20 ? `<span style="color:#aaa;font-size:13px;">+${countryList.length - 20} 更多</span>` : ''}

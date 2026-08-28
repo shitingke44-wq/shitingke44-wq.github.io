@@ -6,8 +6,7 @@
     <title>kk's Photography</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ========== 样式保持不变，省略以节省篇幅 ========== */
-        /* 实际使用时请保留完整的样式代码 */
+        /* ========== 全局重置 & 白色基调 ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -1040,7 +1039,6 @@
         const SUPABASE_KEY = 'sb_publishable_ja7rUD-fbI0XyC_qPbWajQ_vozvfZmD';
         const CLOUD_NAME = 'e33jixhq';
         const UPLOAD_PRESET = 'my_website';
-
         const ADMIN_PASSWORD = 'kst2142600396';
 
         // ================================================================
@@ -1050,164 +1048,18 @@
         const COUNTRY_KEY = 'kk_countries_list';
         const CITY_KEY = 'kk_cities_list';
 
-        // 默认示例数据
-        const DEFAULT_PHOTOS = [{
-            id: 1,
-            title: '故宫的晨光',
-            country: '中国',
-            city: '北京',
-            image_url: 'https://picsum.photos/seed/beijing1/800/600'
-        }, {
-            id: 2,
-            title: '胡同里的猫',
-            country: '中国',
-            city: '北京',
-            image_url: 'https://picsum.photos/seed/beijing2/800/600'
-        }, {
-            id: 3,
-            title: '国贸日落',
-            country: '中国',
-            city: '北京',
-            image_url: 'https://picsum.photos/seed/beijing3/800/600'
-        }, {
-            id: 4,
-            title: '后海夜色',
-            country: '中国',
-            city: '北京',
-            image_url: 'https://picsum.photos/seed/beijing4/800/600'
-        }, {
-            id: 5,
-            title: '外滩风云',
-            country: '中国',
-            city: '上海',
-            image_url: 'https://picsum.photos/seed/shanghai1/800/600'
-        }, {
-            id: 6,
-            title: '弄堂光影',
-            country: '中国',
-            city: '上海',
-            image_url: 'https://picsum.photos/seed/shanghai2/800/600'
-        }, {
-            id: 7,
-            title: '陆家嘴之夜',
-            country: '中国',
-            city: '上海',
-            image_url: 'https://picsum.photos/seed/shanghai3/800/600'
-        }, {
-            id: 8,
-            title: '武康路转角',
-            country: '中国',
-            city: '上海',
-            image_url: 'https://picsum.photos/seed/shanghai4/800/600'
-        }, {
-            id: 9,
-            title: '珠江漫步',
-            country: '中国',
-            city: '广州',
-            image_url: 'https://picsum.photos/seed/guangzhou1/800/600'
-        }, {
-            id: 10,
-            title: '沙面老建筑',
-            country: '中国',
-            city: '广州',
-            image_url: 'https://picsum.photos/seed/guangzhou2/800/600'
-        }, {
-            id: 11,
-            title: '广州塔云端',
-            country: '中国',
-            city: '广州',
-            image_url: 'https://picsum.photos/seed/guangzhou3/800/600'
-        }, {
-            id: 12,
-            title: '深圳湾日落',
-            country: '中国',
-            city: '深圳',
-            image_url: 'https://picsum.photos/seed/shenzhen1/800/600'
-        }, {
-            id: 13,
-            title: '华侨城创意园',
-            country: '中国',
-            city: '深圳',
-            image_url: 'https://picsum.photos/seed/shenzhen2/800/600'
-        }, {
-            id: 14,
-            title: '梧桐山远眺',
-            country: '中国',
-            city: '深圳',
-            image_url: 'https://picsum.photos/seed/shenzhen3/800/600'
-        }, {
-            id: 15,
-            title: '西湖晨雾',
-            country: '中国',
-            city: '杭州',
-            image_url: 'https://picsum.photos/seed/hangzhou1/800/600'
-        }, {
-            id: 16,
-            title: '断桥残雪',
-            country: '中国',
-            city: '杭州',
-            image_url: 'https://picsum.photos/seed/hangzhou2/800/600'
-        }, {
-            id: 17,
-            title: '龙井茶园',
-            country: '中国',
-            city: '杭州',
-            image_url: 'https://picsum.photos/seed/hangzhou3/800/600'
-        }, {
-            id: 18,
-            title: '宽窄巷子',
-            country: '中国',
-            city: '成都',
-            image_url: 'https://picsum.photos/seed/chengdu1/800/600'
-        }, {
-            id: 19,
-            title: '锦里夜色',
-            country: '中国',
-            city: '成都',
-            image_url: 'https://picsum.photos/seed/chengdu2/800/600'
-        }, {
-            id: 20,
-            title: '大熊猫基地',
-            country: '中国',
-            city: '成都',
-            image_url: 'https://picsum.photos/seed/chengdu3/800/600'
-        }, {
-            id: 21,
-            title: '洪崖洞夜景',
-            country: '中国',
-            city: '重庆',
-            image_url: 'https://picsum.photos/seed/chongqing1/800/600'
-        }, {
-            id: 22,
-            title: '山城步道',
-            country: '中国',
-            city: '重庆',
-            image_url: 'https://picsum.photos/seed/chongqing2/800/600'
-        }, {
-            id: 23,
-            title: '长江索道',
-            country: '中国',
-            city: '重庆',
-            image_url: 'https://picsum.photos/seed/chongqing3/800/600'
-        }, {
-            id: 24,
-            title: '钟楼暮色',
-            country: '中国',
-            city: '西安',
-            image_url: 'https://picsum.photos/seed/xian1/800/600'
-        }, {
-            id: 25,
-            title: '城墙根下',
-            country: '中国',
-            city: '西安',
-            image_url: 'https://picsum.photos/seed/xian2/800/600'
-        }, {
-            id: 26,
-            title: '大唐不夜城',
-            country: '中国',
-            city: '西安',
-            image_url: 'https://picsum.photos/seed/xian3/800/600'
-        }];
+        // ================================================================
+        //  只生成一张默认照片
+        // ================================================================
+        function generateDefaultPhotos() {
+            return [{
+                id: 1,
+                title: '欢迎来到 kk\'s Photography',
+                country: '中国',
+                city: '北京',
+                image_url: 'https://picsum.photos/seed/welcome/800/600'
+            }];
+        }
 
         // ---- 本地存储辅助 ----
         function loadPhotos() {
@@ -1255,7 +1107,7 @@
             localStorage.setItem(CITY_KEY, JSON.stringify(cities));
         }
 
-        // ---- 辅助函数（从照片中重建分类） ----
+        // ---- 辅助函数 ----
         function rebuildCategories(photos) {
             const countrySet = new Set();
             const citySet = new Set();
@@ -1280,15 +1132,16 @@
         let searchQuery = '';
         let selectedCountry = null;
         let selectedCity = null;
-        let isSyncing = false; // 防止并发同步
+        let isSyncing = false;
 
-        // ---- 初始化或刷新数据 ----
+        // ---- 初始化数据 ----
         function loadAllData() {
             photos = loadPhotos() || [];
-            countries = loadCountries() || [];
-            cities = loadCities() || [];
+            countries = loadCountries() || ['中国'];
+            cities = loadCities() || [{ country: '中国', city: '北京' }];
+            
             if (photos.length === 0) {
-                photos = DEFAULT_PHOTOS.slice();
+                photos = generateDefaultPhotos();
                 const cats = rebuildCategories(photos);
                 countries = cats.countries;
                 cities = cats.cities;
@@ -1298,7 +1151,7 @@
             }
         }
 
-        // ---- 强制从云端拉取 ----
+        // ---- 从云端拉取 ----
         async function fetchFromCloud() {
             const statusEl = document.getElementById('syncStatus');
             if (statusEl) {
@@ -1335,11 +1188,12 @@
                     }
                     return true;
                 } else {
-                    const cats = rebuildCategories(DEFAULT_PHOTOS);
-                    savePhotos(DEFAULT_PHOTOS);
+                    const defaultPhotos = generateDefaultPhotos();
+                    const cats = rebuildCategories(defaultPhotos);
+                    savePhotos(defaultPhotos);
                     saveCountries(cats.countries);
                     saveCities(cats.cities);
-                    photos = DEFAULT_PHOTOS.slice();
+                    photos = defaultPhotos;
                     countries = cats.countries;
                     cities = cats.cities;
                     await syncToSupabase(photos);
@@ -1361,10 +1215,9 @@
         }
 
         // ================================================================
-        //  🔧 修复的核心函数：syncToSupabase（使用 upsert 方式）
+        //  🔧 修复：同步到 Supabase（使用 upsert 方式，不会误删数据）
         // ================================================================
         async function syncToSupabase(photosToSync) {
-            // 防止并发同步
             if (isSyncing) {
                 console.log('同步正在进行中，跳过本次同步');
                 return false;
@@ -1379,48 +1232,96 @@
             
             try {
                 // 1. 获取现有记录
-                const listRes = await fetch(`${SUPABASE_URL}photos?select=id`, {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                const listRes = await fetch(`${SUPABASE_URL}photos?select=id,title,country,city,image_url`, {
+                    headers: { 
+                        'apikey': SUPABASE_KEY, 
+                        'Authorization': `Bearer ${SUPABASE_KEY}` 
+                    }
                 });
                 if (!listRes.ok) throw new Error(`获取云端列表失败 (${listRes.status})`);
                 const existing = await listRes.json();
 
-                // 2. 删除所有现有记录
-                for (const item of existing) {
-                    const delRes = await fetch(`${SUPABASE_URL}photos?id=eq.${item.id}`, {
+                // 2. 创建云端数据映射
+                const cloudMap = {};
+                existing.forEach(item => {
+                    const key = `${item.title}|${item.country}|${item.city}|${item.image_url}`;
+                    cloudMap[key] = item.id;
+                });
+
+                // 3. 创建本地数据映射
+                const localMap = {};
+                photosToSync.forEach(p => {
+                    const key = `${p.title}|${p.country}|${p.city}|${p.image_url}`;
+                    localMap[key] = p;
+                });
+
+                // 4. 找出需要删除的（在云端但不在本地）
+                const toDelete = [];
+                for (const key in cloudMap) {
+                    if (!localMap[key]) {
+                        toDelete.push(cloudMap[key]);
+                    }
+                }
+
+                // 5. 删除不匹配的记录
+                for (const id of toDelete) {
+                    const delRes = await fetch(`${SUPABASE_URL}photos?id=eq.${id}`, {
                         method: 'DELETE',
-                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                        headers: { 
+                            'apikey': SUPABASE_KEY, 
+                            'Authorization': `Bearer ${SUPABASE_KEY}` 
+                        }
                     });
                     if (!delRes.ok) {
-                        console.warn(`删除记录 ${item.id} 失败: ${delRes.status}`);
+                        console.warn(`删除记录 ${id} 失败: ${delRes.status}`);
                     }
                 }
 
-                // 3. 插入新数据
-                const dataToInsert = photosToSync.map(p => ({
-                    title: p.title || '',
-                    country: p.country || '',
-                    city: p.city || '',
-                    image_url: p.image_url || ''
-                }));
-                
-                for (const p of dataToInsert) {
-                    const postRes = await fetch(`${SUPABASE_URL}photos`, {
-                        method: 'POST',
-                        headers: {
-                            'apikey': SUPABASE_KEY,
-                            'Authorization': `Bearer ${SUPABASE_KEY}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(p)
-                    });
-                    if (!postRes.ok) {
-                        const errText = await postRes.text();
-                        throw new Error(`插入记录失败 (${postRes.status}): ${errText}`);
+                // 6. 更新或插入数据
+                for (const p of photosToSync) {
+                    const key = `${p.title}|${p.country}|${p.city}|${p.image_url}`;
+                    const existingId = cloudMap[key];
+                    
+                    const data = {
+                        title: p.title || '',
+                        country: p.country || '',
+                        city: p.city || '',
+                        image_url: p.image_url || ''
+                    };
+                    
+                    if (existingId) {
+                        // 更新现有记录
+                        const updateRes = await fetch(`${SUPABASE_URL}photos?id=eq.${existingId}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(data)
+                        });
+                        if (!updateRes.ok) {
+                            console.warn(`更新记录 ${existingId} 失败: ${updateRes.status}`);
+                        }
+                    } else {
+                        // 插入新记录
+                        const postRes = await fetch(`${SUPABASE_URL}photos`, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(data)
+                        });
+                        if (!postRes.ok) {
+                            const errText = await postRes.text();
+                            console.warn(`插入记录失败: ${errText}`);
+                        }
                     }
                 }
 
-                // 4. 从云端拉取最新数据
+                // 7. 从云端拉取最新数据
                 const fetchRes = await fetch(`${SUPABASE_URL}photos?select=*`, {
                     headers: {
                         'apikey': SUPABASE_KEY,
@@ -1430,36 +1331,20 @@
                 if (!fetchRes.ok) throw new Error(`拉取云端数据失败 (${fetchRes.status})`);
                 const cloudData = await fetchRes.json();
 
-                // 5. 🔥 关键修复：基于标题和图片URL去重合并
-                const mergedPhotos = photosToSync.map((localPhoto, index) => {
-                    // 尝试匹配云端数据（通过标题和图片URL）
-                    const matchingCloud = cloudData.find(c => 
-                        c.title === localPhoto.title && 
-                        c.image_url === localPhoto.image_url &&
-                        c.country === localPhoto.country &&
-                        c.city === localPhoto.city
-                    );
-                    
-                    return {
-                        id: matchingCloud ? matchingCloud.id : (Date.now() + index),
-                        title: localPhoto.title || '',
-                        country: localPhoto.country || '',
-                        city: localPhoto.city || '',
-                        image_url: localPhoto.image_url || ''
-                    };
-                });
+                // 8. 更新本地数据
+                const updatedPhotos = cloudData.map(record => ({
+                    id: record.id,
+                    title: record.title || '',
+                    country: record.country || '',
+                    city: record.city || '',
+                    image_url: record.image_url || ''
+                }));
 
-                // 如果云端返回的数据与本地数量不一致，检查是否有重复
-                if (mergedPhotos.length !== photosToSync.length) {
-                    console.warn('数据数量不一致，使用本地数据合并');
-                }
-
-                // 6. 保存合并后的数据
-                savePhotos(mergedPhotos);
-                const cats = rebuildCategories(mergedPhotos);
+                savePhotos(updatedPhotos);
+                const cats = rebuildCategories(updatedPhotos);
                 saveCountries(cats.countries);
                 saveCities(cats.cities);
-                photos = mergedPhotos;
+                photos = updatedPhotos;
                 countries = cats.countries;
                 cities = cats.cities;
 
@@ -1500,7 +1385,7 @@
         }
 
         // ================================================================
-        //  核心功能（页面导航、渲染、管理）
+        //  核心功能
         // ================================================================
 
         // ---- 页面导航 ----
@@ -1639,7 +1524,7 @@
             return result;
         }
 
-        // ---- 分类筛选渲染 ----
+        // ---- 分类筛选 ----
         function renderFilters() {
             const filterSection = document.getElementById('filterSection');
             
@@ -1980,11 +1865,8 @@
             });
         }
 
-        // ================================================================
-        //  🔧 修复的核心函数：CRUD 操作（移除重复的 refreshAll 调用）
-        // ================================================================
+        // ---- CRUD 操作 ----
         function addPhoto(title, country, city, imageUrl) {
-            // 使用更唯一的ID
             const newPhoto = {
                 id: Date.now() + Math.random() * 1000,
                 title: title || '',
@@ -1999,9 +1881,7 @@
             savePhotos(photos);
             saveCountries(countries);
             saveCities(cities);
-            // 🔥 只调用一次 refreshAll
             refreshAll();
-            // 🔥 异步同步到云端（不阻塞UI），并捕获错误
             syncToSupabase(photos).catch(err => console.error('同步失败:', err));
         }
 
@@ -2020,7 +1900,6 @@
             savePhotos(photos);
             saveCountries(countries);
             saveCities(cities);
-            // 🔥 只调用一次 refreshAll
             refreshAll();
             syncToSupabase(photos).catch(err => console.error('同步失败:', err));
         }
@@ -2033,7 +1912,6 @@
             savePhotos(photos);
             saveCountries(countries);
             saveCities(cities);
-            // 🔥 只调用一次 refreshAll
             refreshAll();
             syncToSupabase(photos).catch(err => console.error('同步失败:', err));
         }
@@ -2064,7 +1942,7 @@
 
         function resetToDefault() {
             if (confirm('将恢复默认示例照片，当前数据将被覆盖，确定吗？')) {
-                photos = DEFAULT_PHOTOS.slice();
+                photos = generateDefaultPhotos();
                 const cats = rebuildCategories(photos);
                 countries = cats.countries;
                 cities = cats.cities;
@@ -2254,10 +2132,11 @@
         // ---- 刷新全部UI ----
         function refreshAll() {
             photos = loadPhotos() || [];
-            countries = loadCountries() || [];
-            cities = loadCities() || [];
+            countries = loadCountries() || ['中国'];
+            cities = loadCities() || [{ country: '中国', city: '北京' }];
+            
             if (photos.length === 0) {
-                photos = DEFAULT_PHOTOS.slice();
+                photos = generateDefaultPhotos();
                 const cats = rebuildCategories(photos);
                 countries = cats.countries;
                 cities = cats.cities;
@@ -2286,21 +2165,17 @@
 
         // ---- 初始化 ----
         async function init() {
-            const cloudOk = await fetchFromCloud();
-            if (!cloudOk) {
-                loadAllData();
-            }
-            photos = loadPhotos() || [];
-            countries = loadCountries() || [];
-            cities = loadCities() || [];
+            loadAllData();
+            
+            await fetchFromCloud();
+            
+            photos = loadPhotos() || photos;
+            countries = loadCountries() || countries;
+            cities = loadCities() || cities;
+            
             if (photos.length === 0) {
-                photos = DEFAULT_PHOTOS.slice();
-                const cats = rebuildCategories(photos);
-                countries = cats.countries;
-                cities = cats.cities;
+                photos = generateDefaultPhotos();
                 savePhotos(photos);
-                saveCountries(countries);
-                saveCities(cities);
             }
             
             renderWorks();

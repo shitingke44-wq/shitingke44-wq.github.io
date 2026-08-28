@@ -1302,7 +1302,7 @@
             }
         }
 
-        // ---- 同步到 Supabase（增强版） ----
+        // ---- 同步到 Supabase（增强版，不包含 id） ----
         async function syncToSupabase(photosToSync) {
             const statusEl = document.getElementById('syncStatus');
             if (statusEl) {
@@ -1328,9 +1328,8 @@
                     }
                 }
 
-                // 3. 批量插入新数据
+                // 3. 批量插入新数据（⚠️ 不包含 id 字段，让数据库自动生成）
                 const dataToInsert = photosToSync.map(p => ({
-                    id: p.id,
                     title: p.title || '',
                     country: p.country || '',
                     city: p.city || '',
@@ -1353,12 +1352,30 @@
                     }
                 }
 
-                // 更新本地缓存
-                savePhotos(photosToSync);
-                const cats = rebuildCategories(photosToSync);
+                // 4. 从云端重新拉取最新数据（获取数据库生成的 id）
+                const fetchRes = await fetch(`${SUPABASE_URL}photos?select=*`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                if (!fetchRes.ok) throw new Error(`拉取云端数据失败 (${fetchRes.status})`);
+                const cloudData = await fetchRes.json();
+                const updatedPhotos = cloudData.map(record => ({
+                    id: record.id,
+                    title: record.title || '',
+                    country: record.country || '',
+                    city: record.city || '',
+                    location: record.location || '',
+                    image: record.image || ''
+                }));
+
+                // 5. 更新本地缓存
+                savePhotos(updatedPhotos);
+                const cats = rebuildCategories(updatedPhotos);
                 saveCountries(cats.countries);
                 saveCities(cats.cities);
-                photos = photosToSync;
+                photos = updatedPhotos;
                 countries = cats.countries;
                 cities = cats.cities;
 
@@ -1792,9 +1809,9 @@
 
         // ---- CRUD 操作 ----
         function addPhoto(title, country, city, location, imageUrl) {
-            const newId = photos.length ? Math.max(...photos.map(p => p.id)) + 1 : 1;
+            // 不再手动生成 id，用 0 作为临时占位
             const newPhoto = {
-                id: newId,
+                id: 0,  // 临时占位，同步后会被云端生成的真实 id 替换
                 title: title || '',
                 country: country.trim(),
                 city: city.trim(),
@@ -1810,7 +1827,7 @@
             savePhotos(photos);
             saveCountries(countries);
             saveCities(cities);
-            // 同步云端
+            // 同步云端，完成后会自动拉取最新数据（包含数据库生成的 id）
             syncToSupabase(photos).then(() => {
                 refreshAll();
             });
@@ -2041,7 +2058,6 @@
             countries.push(name);
             countries.sort();
             saveCountries(countries);
-            // 更新城市列表（可能没有城市，但为了结构）
             refreshAll();
             input.value = '';
         });
@@ -2118,7 +2134,6 @@
         // ---- 渲染导航城市按钮 ----
         function renderCityButtons() {
             const filter = document.getElementById('cityFilter');
-            // 清除旧按钮（保留全部按钮）
             const allBtn = filter.querySelector('.all-btn');
             filter.querySelectorAll('.city-btn:not(.all-btn)').forEach(btn => btn.remove());
             const citySet = new Set(photos.map(p => p.city));
@@ -2131,16 +2146,13 @@
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
-                    // 这里可跳转到works并筛选，简化版直接跳转
                     showPage('works');
-                    // 选中对应城市
                     selectedCountry = null;
                     selectedCity = city;
                     renderWorks();
                 });
                 filter.appendChild(btn);
             });
-            // 全部按钮事件
             allBtn.addEventListener('click', function() {
                 document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');

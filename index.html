@@ -1104,16 +1104,10 @@
 
     <script>
         // ================================================================
-        //  🔐 你的 Supabase 项目凭证（已按你提供的信息填入）
+        //  🔐 你的 Supabase 项目凭证
         // ================================================================
-        const supabaseUrl = "https://reugwylbgeqagochuaov.supabase.co";   // 项目 URL（去掉了 /rest/v1）
-        const supabaseAnonKey = "sb_publishable_LFpL3nbjs6_bbF-G513fSA_knAxjO_L"; // 你提供的 key
-        // ================================================================
-
-        // 注意：如果连接失败，请检查 supabaseAnonKey 是否为有效的 anon key（通常以 eyJ 开头）
-        // 你提供的是 sb_publishable_...，可能不是正确的 anon key，请到 Supabase 后台确认。
-
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+        const supabaseUrl = "https://reugwylbgeqagochuaov.supabase.co";
+        const supabaseAnonKey = "sb_publishable_LFpL3nbjs6_bbF-G513fSA_knAxjO_L"; // 如果无效，请替换为正确的 anon key
 
         // ================================================================
         //  状态管理
@@ -1125,6 +1119,8 @@
         let editingId = null;
         let carouselIndex = 0;
         let carouselInterval = null;
+        let supabaseClient = null;
+        let useSupabase = false;
 
         // ================================================================
         //  DOM 引用
@@ -1203,61 +1199,120 @@
         }
 
         // ================================================================
-        //  数据库操作
+        //  数据操作（兼容 Supabase 和本地降级）
         // ================================================================
         async function loadPhotos() {
-            const { data, error } = await supabase
-                .from('photos')
-                .select('*')
-                .order('id', { ascending: false });
-
-            if (error) {
-                console.error('加载失败:', error);
-                alert('数据加载失败，请检查网络或 Supabase 配置。\n错误信息: ' + error.message);
-                return;
+            if (useSupabase && supabaseClient) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('photos')
+                        .select('*')
+                        .order('id', { ascending: false });
+                    if (error) {
+                        console.warn('Supabase 查询失败，使用本地数据:', error);
+                        useSupabase = false;
+                        loadLocalData();
+                        return;
+                    }
+                    if (data && data.length > 0) {
+                        photos = data;
+                    } else {
+                        // 如果云端无数据，使用本地默认
+                        loadLocalData();
+                    }
+                } catch (e) {
+                    console.warn('Supabase 连接异常，使用本地数据:', e);
+                    useSupabase = false;
+                    loadLocalData();
+                }
+            } else {
+                loadLocalData();
             }
-            photos = data || [];
             renderAll();
         }
 
-        async function addPhotoToDB(title, country, city, image_url) {
-            const { error } = await supabase
-                .from('photos')
-                .insert([{ title, country, city, image_url }]);
-
-            if (error) {
-                console.error('添加失败:', error);
-                alert('添加失败: ' + error.message);
-                return false;
+        function loadLocalData() {
+            // 默认静态数据（若 localStorage 有则优先）
+            const stored = localStorage.getItem('kk_photos_local');
+            if (stored) {
+                try {
+                    photos = JSON.parse(stored);
+                    return;
+                } catch (e) { /* ignore */ }
             }
+            photos = [
+                { id: 1, title: '城市晨曦', country: '中国', city: '上海', image_url: 'https://picsum.photos/seed/shanghai1/800/600' },
+                { id: 2, title: '老街光影', country: '中国', city: '北京', image_url: 'https://picsum.photos/seed/beijing1/800/600' },
+                { id: 3, title: '河畔黄昏', country: '法国', city: '巴黎', image_url: 'https://picsum.photos/seed/paris1/800/600' },
+                { id: 4, title: '雨中即景', country: '日本', city: '东京', image_url: 'https://picsum.photos/seed/tokyo1/800/600' },
+                { id: 5, title: '广场鸽子', country: '意大利', city: '罗马', image_url: 'https://picsum.photos/seed/rome1/800/600' },
+                { id: 6, title: '海岸落日', country: '美国', city: '洛杉矶', image_url: 'https://picsum.photos/seed/la1/800/600' }
+            ];
+        }
+
+        function saveLocalData() {
+            localStorage.setItem('kk_photos_local', JSON.stringify(photos));
+        }
+
+        async function addPhotoToDB(title, country, city, image_url) {
+            if (useSupabase && supabaseClient) {
+                const { error } = await supabaseClient
+                    .from('photos')
+                    .insert([{ title, country, city, image_url }]);
+                if (error) {
+                    console.warn('Supabase 插入失败，保存到本地', error);
+                    useSupabase = false;
+                    // 降级到本地
+                } else {
+                    return true;
+                }
+            }
+            // 本地降级
+            const newId = Date.now();
+            photos.push({ id: newId, title, country, city, image_url });
+            saveLocalData();
             return true;
         }
 
         async function updatePhotoInDB(id, title, country, city, image_url) {
-            const { error } = await supabase
-                .from('photos')
-                .update({ title, country, city, image_url })
-                .eq('id', id);
-
-            if (error) {
-                console.error('更新失败:', error);
-                alert('更新失败: ' + error.message);
-                return false;
+            if (useSupabase && supabaseClient) {
+                const { error } = await supabaseClient
+                    .from('photos')
+                    .update({ title, country, city, image_url })
+                    .eq('id', id);
+                if (error) {
+                    console.warn('Supabase 更新失败，保存到本地', error);
+                    useSupabase = false;
+                } else {
+                    return true;
+                }
             }
-            return true;
+            // 本地降级
+            const idx = photos.findIndex(p => p.id === id);
+            if (idx !== -1) {
+                photos[idx] = { ...photos[idx], title, country, city, image_url };
+                saveLocalData();
+                return true;
+            }
+            return false;
         }
 
         async function deletePhotoFromDB(id) {
-            const { error } = await supabase
-                .from('photos')
-                .delete()
-                .eq('id', id);
-
-            if (error) {
-                console.error('删除失败:', error);
-                alert('删除失败: ' + error.message);
-                return false;
+            if (useSupabase && supabaseClient) {
+                const { error } = await supabaseClient
+                    .from('photos')
+                    .delete()
+                    .eq('id', id);
+                if (error) {
+                    console.warn('Supabase 删除失败，从本地删除', error);
+                    useSupabase = false;
+                } else {
+                    return true;
+                }
             }
+            // 本地降级
+            photos = photos.filter(p => p.id !== id);
+            saveLocalData();
             return true;
         }
 
@@ -1579,7 +1634,8 @@
             renderAdminCategories();
             const syncStatus = $('syncStatus');
             if (syncStatus) {
-                syncStatus.textContent = `✅ 已加载 ${photos.length} 张照片 (Supabase)`;
+                const mode = useSupabase ? 'Supabase' : '本地存储';
+                syncStatus.textContent = `✅ 已加载 ${photos.length} 张照片 (${mode})`;
                 syncStatus.style.color = '#6fcf97';
             }
         }
@@ -1655,116 +1711,158 @@
         }
 
         // ================================================================
-        //  事件绑定
+        //  初始化 Supabase (容错)
         // ================================================================
-        navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                const page = link.dataset.page;
-                switchPage(page);
+        function initSupabase() {
+            try {
+                if (typeof window.supabase !== 'undefined') {
+                    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+                    useSupabase = true;
+                    console.log('✅ Supabase 客户端初始化成功');
+                } else {
+                    console.warn('⚠️ Supabase SDK 未加载，使用本地数据');
+                }
+            } catch (e) {
+                console.warn('⚠️ Supabase 初始化失败，使用本地数据', e);
+            }
+        }
+
+        // ================================================================
+        //  事件绑定（确保在 DOM 加载完成后执行）
+        // ================================================================
+        function bindEvents() {
+            // 导航切换
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    const page = link.dataset.page;
+                    switchPage(page);
+                });
             });
-        });
 
-        enterGalleryBtn.addEventListener('click', () => {
-            switchPage('works');
-        });
+            // ENTER GALLERY 按钮
+            enterGalleryBtn.addEventListener('click', () => {
+                switchPage('works');
+            });
 
-        modalClose.addEventListener('click', closeModal);
-        modalOverlay.addEventListener('click', (e) => {
-            if (e.target === modalOverlay) closeModal();
-        });
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeModal();
-                closePolaroid();
-            }
-        });
+            // 模态框
+            modalClose.addEventListener('click', closeModal);
+            modalOverlay.addEventListener('click', (e) => {
+                if (e.target === modalOverlay) closeModal();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeModal();
+                    closePolaroid();
+                }
+            });
 
-        modalPrinterBtn.addEventListener('click', () => {
-            const photoId = parseInt(modalOverlay.dataset.photoId);
-            const photo = photos.find(p => p.id === photoId);
-            if (photo) {
-                closeModal();
-                setTimeout(() => openPolaroid(photo), 300);
-            }
-        });
-        polaroidClose.addEventListener('click', closePolaroid);
-        polaroidOverlay.addEventListener('click', (e) => {
-            if (e.target === polaroidOverlay) closePolaroid();
-        });
+            // 拍立得
+            modalPrinterBtn.addEventListener('click', () => {
+                const photoId = parseInt(modalOverlay.dataset.photoId);
+                const photo = photos.find(p => p.id === photoId);
+                if (photo) {
+                    closeModal();
+                    setTimeout(() => openPolaroid(photo), 300);
+                }
+            });
+            polaroidClose.addEventListener('click', closePolaroid);
+            polaroidOverlay.addEventListener('click', (e) => {
+                if (e.target === polaroidOverlay) closePolaroid();
+            });
 
-        adminToggle.addEventListener('click', () => {
-            adminPanel.classList.toggle('open');
-            if (adminPanel.classList.contains('open')) {
-                authPassword.focus();
-            }
-        });
-        adminClose.addEventListener('click', () => {
-            adminPanel.classList.remove('open');
-        });
-
-        authSubmitBtn.addEventListener('click', handleAuth);
-        authPassword.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') handleAuth();
-        });
-
-        formCountry.addEventListener('change', updateCountrySelects);
-
-        formSaveBtn.addEventListener('click', savePhoto);
-        formCancelBtn.addEventListener('click', cancelEdit);
-
-        addPhotoBtn.addEventListener('click', () => {
-            editingId = null;
-            formTitle.value = '';
-            formCountry.value = '';
-            formCity.value = '';
-            formImageUrl.value = '';
-            updateCountrySelects();
-            editForm.classList.add('show');
-            editForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
-
-        resetDefaultBtn.addEventListener('click', resetDefault);
-
-        addCountryBtn.addEventListener('click', async () => {
-            const name = newCountryInput.value.trim();
-            if (!name) { alert('请输入国家名称'); return; }
-            if (getCountries().includes(name)) { alert('国家已存在'); return; }
-            const ok = await addPhotoToDB(`新照片 - ${name}`, name, '示例城市', 'https://picsum.photos/seed/' + Date.now() +
-                '/800/600');
-            if (ok) {
-                await loadPhotos();
-                newCountryInput.value = '';
-            }
-        });
-
-        addCityBtn.addEventListener('click', async () => {
-            const country = cityCountrySelect.value;
-            const name = newCityInput.value.trim();
-            if (!country) { alert('请选择国家'); return; }
-            if (!name) { alert('请输入城市名称'); return; }
-            if (getCities(country).includes(name)) { alert('城市已存在'); return; }
-            const ok = await addPhotoToDB(`新照片 - ${name}`, country, name, 'https://picsum.photos/seed/' + Date.now() +
-                '/800/600');
-            if (ok) {
-                await loadPhotos();
-                newCityInput.value = '';
-            }
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && adminPanel.classList.contains('open')) {
+            // 管理面板
+            adminToggle.addEventListener('click', () => {
+                adminPanel.classList.toggle('open');
+                if (adminPanel.classList.contains('open')) {
+                    authPassword.focus();
+                }
+            });
+            adminClose.addEventListener('click', () => {
                 adminPanel.classList.remove('open');
-            }
-        });
+            });
+
+            // 认证
+            authSubmitBtn.addEventListener('click', handleAuth);
+            authPassword.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') handleAuth();
+            });
+
+            // 表单
+            formCountry.addEventListener('change', updateCountrySelects);
+            formSaveBtn.addEventListener('click', savePhoto);
+            formCancelBtn.addEventListener('click', cancelEdit);
+
+            // 添加照片
+            addPhotoBtn.addEventListener('click', () => {
+                editingId = null;
+                formTitle.value = '';
+                formCountry.value = '';
+                formCity.value = '';
+                formImageUrl.value = '';
+                updateCountrySelects();
+                editForm.classList.add('show');
+                editForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            });
+
+            // 恢复默认
+            resetDefaultBtn.addEventListener('click', resetDefault);
+
+            // 添加国家
+            addCountryBtn.addEventListener('click', async () => {
+                const name = newCountryInput.value.trim();
+                if (!name) { alert('请输入国家名称'); return; }
+                if (getCountries().includes(name)) { alert('国家已存在'); return; }
+                const ok = await addPhotoToDB(`新照片 - ${name}`, name, '示例城市', 'https://picsum.photos/seed/' + Date
+                .now() +
+                    '/800/600');
+                if (ok) {
+                    await loadPhotos();
+                    newCountryInput.value = '';
+                }
+            });
+
+            // 添加城市
+            addCityBtn.addEventListener('click', async () => {
+                const country = cityCountrySelect.value;
+                const name = newCityInput.value.trim();
+                if (!country) { alert('请选择国家'); return; }
+                if (!name) { alert('请输入城市名称'); return; }
+                if (getCities(country).includes(name)) { alert('城市已存在'); return; }
+                const ok = await addPhotoToDB(`新照片 - ${name}`, country, name, 'https://picsum.photos/seed/' + Date
+                .now() +
+                    '/800/600');
+                if (ok) {
+                    await loadPhotos();
+                    newCityInput.value = '';
+                }
+            });
+
+            // ESC 关闭管理面板
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && adminPanel.classList.contains('open')) {
+                    adminPanel.classList.remove('open');
+                }
+            });
+        }
 
         // ================================================================
-        //  初始化
+        //  启动应用
         // ================================================================
-        loadPhotos();
-        switchPage('home');
+        function init() {
+            initSupabase();
+            loadPhotos();
+            switchPage('home');
+            bindEvents();
+            console.log('📸 kk\'s Photography 已启动');
+            console.log('🔑 管理密码: ' + ADMIN_PASSWORD);
+        }
 
-        console.log('📸 kk\'s Photography with Supabase 已启动');
-        console.log('🔑 使用密码: ' + ADMIN_PASSWORD + ' 进入管理面板');
+        // 等待 DOM 加载完成
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     </script>
 
 </body>

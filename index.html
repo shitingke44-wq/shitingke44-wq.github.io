@@ -292,6 +292,23 @@
             border-color: #d4a574;
             color: #fff;
         }
+        .filter-back {
+            background: transparent;
+            border: none;
+            color: #888;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 6px 12px;
+            font-family: inherit;
+            transition: color 0.2s;
+        }
+        .filter-back:hover { color: #1a1a1a; }
+        .filter-divider {
+            color: #ddd;
+            font-size: 20px;
+            font-weight: 300;
+            padding: 0 4px;
+        }
 
         /* 照片网格（两列） */
         .photo-grid {
@@ -883,7 +900,7 @@
         <div class="search-section" id="searchSection">
             <div class="search-box">
                 <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="搜索照片标题、国家或城市..." />
+                <input type="text" id="searchInput" placeholder="搜索照片标题、国家、省份或城市..." />
                 <button class="clear-btn" id="clearSearchBtn"><i class="fas fa-times-circle"></i></button>
             </div>
             <div class="search-stats" id="searchStats">
@@ -922,7 +939,7 @@
             <div class="modal-footer">
                 <div class="info">
                     <span class="title" id="modalTitle">标题</span>
-                    <span class="location" id="modalLocation">国家 · 城市</span>
+                    <span class="location" id="modalLocation">国家 · 省份 · 城市</span>
                 </div>
                 <div class="actions">
                     <button class="printer-btn" id="modalPrinterBtn"><i class="fas fa-print"></i> 拍立得</button>
@@ -940,7 +957,7 @@
             </div>
             <div class="polaroid-caption">
                 <div class="p-title" id="polaroidTitle">标题</div>
-                <div class="p-location" id="polaroidLocation">国家 · 城市</div>
+                <div class="p-location" id="polaroidLocation">国家 · 省份 · 城市</div>
             </div>
         </div>
     </div>
@@ -978,6 +995,10 @@
                 <div class="form-row">
                     <label>国家</label>
                     <select id="formCountry"><option value="">— 选择国家 —</option></select>
+                </div>
+                <div class="form-row">
+                    <label>省份/州（手动输入）</label>
+                    <input type="text" id="formState" placeholder="输入省份/州名称（可选）" />
                 </div>
                 <div class="form-row">
                     <label>城市</label>
@@ -1032,64 +1053,45 @@
         ];
 
         // ================================================================
-        //  默认数据（只包含国家和城市）
+        //  默认数据（包含省份，但只作为示例，不是全部）
         // ================================================================
         function generateDefaultPhotos() {
             const photos = [];
-            const cityList = [
-                '北京', '上海', '广州', '深圳', '杭州', '成都', '重庆', '武汉',
-                '南京', '天津', '西安', '长沙', '郑州', '东莞', '青岛', '沈阳',
-                '大连', '厦门', '苏州', '宁波', '无锡', '佛山', '合肥', '福州',
-                '昆明', '哈尔滨', '长春', '石家庄', '太原', '南昌', '南宁', '贵阳',
-                '兰州', '乌鲁木齐', '呼和浩特', '银川', '拉萨', '海口', '香港', '澳门',
-                '东京', '大阪', '京都', '首尔', '曼谷', '新加坡', '吉隆坡', '伦敦',
-                '巴黎', '柏林', '罗马', '马德里', '里斯本', '阿姆斯特丹', '维也纳', '苏黎世'
+            const sampleData = [
+                { country: '中国', state: '北京市', city: '北京' },
+                { country: '中国', state: '上海市', city: '上海' },
+                { country: '中国', state: '广东省', city: '广州' },
+                { country: '中国', state: '浙江省', city: '杭州' },
+                { country: '中国', state: '四川省', city: '成都' },
+                { country: '中国', state: '湖北省', city: '武汉' },
+                { country: '中国', state: '香港特别行政区', city: '香港' },
+                { country: '日本', state: '京都府', city: '京都' },
+                { country: '日本', state: '东京都', city: '东京' },
+                { country: '英国', state: '英格兰', city: '伦敦' },
+                { country: '法国', state: '法兰西岛', city: '巴黎' },
+                { country: '美国', state: '加利福尼亚州', city: '洛杉矶' },
+                { country: '美国', state: '纽约州', city: '纽约' },
+                { country: '澳大利亚', state: '新南威尔士州', city: '悉尼' },
             ];
             
             let id = 1;
-            // 中国主要城市
-            const chineseCities = ['北京', '上海', '广州', '深圳', '杭州', '成都', '重庆', '武汉', '南京', '天津', '西安', '长沙', '郑州', '青岛', '厦门', '苏州', '宁波', '昆明', '哈尔滨', '长春', '乌鲁木齐', '拉萨', '香港', '澳门'];
-            chineseCities.forEach(city => {
+            sampleData.forEach(({ country, state, city }) => {
                 photos.push({
                     id: id++,
                     title: `${city}的美丽风光`,
-                    country: '中国',
+                    country: country,
+                    state: state,
                     city: city,
                     image_url: `https://picsum.photos/seed/${city}${id}/800/600`
                 });
-                if (id % 3 === 0) {
-                    photos.push({
-                        id: id++,
-                        title: `${city}城市街景`,
-                        country: '中国',
-                        city: city + '市区',
-                        image_url: `https://picsum.photos/seed/${city}${id}/800/600`
-                    });
-                }
-            });
-            
-            // 其他国家
-            const foreignCities = [
-                { country: '日本', city: '东京' },
-                { country: '日本', city: '大阪' },
-                { country: '日本', city: '京都' },
-                { country: '韩国', city: '首尔' },
-                { country: '泰国', city: '曼谷' },
-                { country: '新加坡', city: '新加坡' },
-                { country: '马来西亚', city: '吉隆坡' },
-                { country: '英国', city: '伦敦' },
-                { country: '法国', city: '巴黎' },
-                { country: '德国', city: '柏林' },
-                { country: '意大利', city: '罗马' },
-                { country: '西班牙', city: '马德里' }
-            ];
-            foreignCities.forEach(({ country, city }) => {
+                // 每个地区加一张额外的
                 photos.push({
                     id: id++,
-                    title: `${city}的城市印象`,
+                    title: `${city}城市街景`,
                     country: country,
-                    city: city,
-                    image_url: `https://picsum.photos/seed/${country}${city}${id}/800/600`
+                    state: state,
+                    city: city + '市区',
+                    image_url: `https://picsum.photos/seed/${city}${id}/800/600`
                 });
             });
             
@@ -1145,11 +1147,18 @@
         // ---- 辅助函数 ----
         function rebuildCategories(photos) {
             const countrySet = new Set();
+            const stateSet = new Set();
             photos.forEach(p => {
                 if (p.country) countrySet.add(p.country);
+                if (p.country && p.state) {
+                    stateSet.add(JSON.stringify({ country: p.country, state: p.state }));
+                }
             });
             return {
-                countries: Array.from(countrySet).sort()
+                countries: Array.from(countrySet).sort(),
+                states: Array.from(stateSet).map(s => JSON.parse(s)).sort((a, b) =>
+                    a.country.localeCompare(b.country) || a.state.localeCompare(b.state)
+                )
             };
         }
 
@@ -1172,8 +1181,10 @@
         // ---- 全局数据 ----
         let photos = [];
         let countries = [];
+        let states = [];
         let searchQuery = '';
         let selectedCountry = null;
+        let selectedState = null;
 
         // ---- 从云端加载 ----
         async function fetchFromCloud() {
@@ -1196,6 +1207,7 @@
                         id: record.id,
                         title: record.title || '',
                         country: record.country || '',
+                        state: record.state || '',
                         city: record.city || '',
                         image_url: record.image_url || ''
                     }));
@@ -1204,6 +1216,7 @@
                     saveCountries(cats.countries);
                     photos = cloudPhotos;
                     countries = cats.countries;
+                    states = cats.states;
                     if (statusEl) {
                         statusEl.textContent = '✅ 已从云端同步';
                         statusEl.style.color = '#6fcf97';
@@ -1216,6 +1229,7 @@
                     saveCountries(cats.countries);
                     photos = defaultPhotos;
                     countries = cats.countries;
+                    states = cats.states;
                     await syncToSupabase(photos);
                     if (statusEl) {
                         statusEl.textContent = '✅ 已同步到云端';
@@ -1231,6 +1245,8 @@
                 }
                 photos = initializeData();
                 countries = loadCountries() || ALL_COUNTRIES;
+                const cats = rebuildCategories(photos);
+                states = cats.states;
                 return false;
             }
         }
@@ -1259,6 +1275,7 @@
                 const dataToInsert = photosToSync.map(p => ({
                     title: p.title || '',
                     country: p.country || '',
+                    state: p.state || '',
                     city: p.city || '',
                     image_url: p.image_url || ''
                 }));
@@ -1290,6 +1307,7 @@
                     id: record.id,
                     title: record.title || '',
                     country: record.country || '',
+                    state: record.state || '',
                     city: record.city || '',
                     image_url: record.image_url || ''
                 }));
@@ -1299,6 +1317,7 @@
                 saveCountries(cats.countries);
                 photos = updatedPhotos;
                 countries = cats.countries;
+                states = cats.states;
 
                 if (statusEl) {
                     statusEl.textContent = '✅ 已同步到云端';
@@ -1437,7 +1456,9 @@
                 if (searchQuery) {
                     statsEl.innerHTML = `找到 <strong>${filtered.length}</strong> 张匹配 "${searchQuery}" 的照片`;
                 } else if (selectedCountry) {
-                    statsEl.innerHTML = `共 <strong>${filtered.length}</strong> 张照片 (国家: ${selectedCountry})`;
+                    let info = `国家: ${selectedCountry}`;
+                    if (selectedState) info += ` · 省份: ${selectedState}`;
+                    statsEl.innerHTML = `共 <strong>${filtered.length}</strong> 张照片 (${info})`;
                 } else {
                     statsEl.innerHTML = `共 <strong>${photos.length}</strong> 张照片`;
                 }
@@ -1452,14 +1473,21 @@
                 result = result.filter(p => p.country === selectedCountry);
             }
             
+            // 省份筛选
+            if (selectedState) {
+                result = result.filter(p => p.state === selectedState);
+            }
+            
             // 搜索筛选
             if (searchQuery) {
                 result = result.filter(p => {
                     const title = (p.title || '').toLowerCase();
                     const country = (p.country || '').toLowerCase();
+                    const state = (p.state || '').toLowerCase();
                     const city = (p.city || '').toLowerCase();
                     return title.includes(searchQuery) || 
                            country.includes(searchQuery) || 
+                           state.includes(searchQuery) ||
                            city.includes(searchQuery);
                 });
             }
@@ -1475,27 +1503,66 @@
             const countrySet = new Set(photos.map(p => p.country));
             const countryList = Array.from(countrySet).sort();
             
-            filterSection.innerHTML = `
-                <div class="filter-group">
-                    <span class="filter-label">国家：</span>
-                    <button class="filter-btn ${!selectedCountry ? 'active' : ''}" data-country="all">全部</button>
-                    ${countryList.map(c => `
-                        <button class="filter-btn ${selectedCountry === c ? 'active' : ''}" data-country="${c}">${c}</button>
-                    `).join('')}
-                </div>
-            `;
-            
-            filterSection.querySelectorAll('.filter-btn[data-country]').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const country = this.dataset.country;
-                    if (country === 'all') {
-                        selectedCountry = null;
-                    } else {
-                        selectedCountry = country;
-                    }
+            if (selectedCountry) {
+                // 显示省份筛选（从已有数据中动态获取）
+                const stateSet = new Set(
+                    photos.filter(p => p.country === selectedCountry).map(p => p.state).filter(Boolean)
+                );
+                const stateList = Array.from(stateSet).sort();
+                
+                filterSection.innerHTML = `
+                    <div class="filter-group">
+                        <button class="filter-back" id="backToCountries"><i class="fas fa-arrow-left"></i> 返回国家</button>
+                        ${stateList.length > 0 ? `<span class="filter-divider">|</span>` : ''}
+                        ${stateList.length > 0 ? `<span class="filter-label">省份：</span>` : ''}
+                        ${stateList.length > 0 ? `<button class="filter-btn ${!selectedState ? 'active' : ''}" data-state="all">全部</button>` : ''}
+                        ${stateList.map(s => `
+                            <button class="filter-btn ${selectedState === s ? 'active' : ''}" data-state="${s}">${s}</button>
+                        `).join('')}
+                        ${stateList.length === 0 ? `<span style="color:#888;font-size:13px;">该国家暂无省份数据</span>` : ''}
+                    </div>
+                `;
+                
+                filterSection.querySelector('#backToCountries').addEventListener('click', function() {
+                    selectedCountry = null;
+                    selectedState = null;
                     renderWorks();
                 });
-            });
+                
+                filterSection.querySelectorAll('.filter-btn[data-state]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const state = this.dataset.state;
+                        selectedState = state === 'all' ? null : state;
+                        renderWorks();
+                    });
+                });
+                
+            } else {
+                // 显示国家筛选
+                filterSection.innerHTML = `
+                    <div class="filter-group">
+                        <span class="filter-label">国家：</span>
+                        <button class="filter-btn ${!selectedCountry ? 'active' : ''}" data-country="all">全部</button>
+                        ${countryList.map(c => `
+                            <button class="filter-btn ${selectedCountry === c ? 'active' : ''}" data-country="${c}">${c}</button>
+                        `).join('')}
+                    </div>
+                `;
+                
+                filterSection.querySelectorAll('.filter-btn[data-country]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const country = this.dataset.country;
+                        if (country === 'all') {
+                            selectedCountry = null;
+                            selectedState = null;
+                        } else {
+                            selectedCountry = country;
+                            selectedState = null;
+                        }
+                        renderWorks();
+                    });
+                });
+            }
         }
 
         // ---- 作品页渲染 ----
@@ -1509,6 +1576,7 @@
                 let emptyMessage = '暂无照片';
                 if (searchQuery) emptyMessage = `没有找到与 "${searchQuery}" 匹配的照片`;
                 else if (selectedCountry) emptyMessage = `在 "${selectedCountry}" 中没有找到照片`;
+                else if (selectedState) emptyMessage = `在 "${selectedState}" 中没有找到照片`;
                 grid.innerHTML = `
                     <div class="empty-state">
                         <i class="fas fa-search"></i>
@@ -1520,7 +1588,7 @@
             }
             
             grid.innerHTML = filtered.map(p => {
-                const location = [p.country, p.city].filter(Boolean).join(' · ');
+                const location = [p.country, p.state, p.city].filter(Boolean).join(' · ');
                 return `
                     <div class="grid-item" data-id="${p.id}">
                         <img src="${p.image_url}" alt="${p.title}" loading="lazy" />
@@ -1548,7 +1616,7 @@
             if (!photo) return;
             document.getElementById('modalImage').src = photo.image_url;
             document.getElementById('modalTitle').textContent = photo.title || '无标题';
-            const location = [photo.country, photo.city].filter(Boolean).join(' · ');
+            const location = [photo.country, photo.state, photo.city].filter(Boolean).join(' · ');
             document.getElementById('modalLocation').textContent = location || '未知地点';
             document.getElementById('photoModal').classList.add('active');
             document.getElementById('photoModal').dataset.photoId = photo.id;
@@ -1579,7 +1647,7 @@
         function showPolaroid(photo) {
             document.getElementById('polaroidImg').src = photo.image_url;
             document.getElementById('polaroidTitle').textContent = photo.title || '无标题';
-            const location = [photo.country, photo.city].filter(Boolean).join(' · ');
+            const location = [photo.country, photo.state, photo.city].filter(Boolean).join(' · ');
             document.getElementById('polaroidLocation').textContent = location || '未知地点';
             document.getElementById('polaroidFullscreen').classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -1689,7 +1757,7 @@
                     <img class="thumb" src="${p.image_url}" alt="${p.title}" />
                     <div class="info">
                         <div class="item-title">${p.title || '无标题'}</div>
-                        <div class="item-location">${p.country} · ${p.city || ''}</div>
+                        <div class="item-location">${p.country} · ${p.state || ''} · ${p.city || ''}</div>
                     </div>
                     <div class="actions">
                         <button class="edit-btn" data-id="${p.id}">✏️ 编辑</button>
@@ -1743,17 +1811,19 @@
         }
 
         // ---- CRUD 操作 ----
-        function addPhoto(title, country, city, imageUrl) {
+        function addPhoto(title, country, state, city, imageUrl) {
             const newPhoto = {
                 id: Date.now(),
                 title: title || '',
                 country: country.trim(),
+                state: state.trim(),
                 city: city.trim(),
                 image_url: imageUrl
             };
             photos.push(newPhoto);
             const cats = rebuildCategories(photos);
             countries = cats.countries;
+            states = cats.states;
             savePhotos(photos);
             saveCountries(countries);
             syncToSupabase(photos).then(() => {
@@ -1762,17 +1832,19 @@
             refreshAll();
         }
 
-        function updatePhoto(id, title, country, city, imageUrl) {
+        function updatePhoto(id, title, country, state, city, imageUrl) {
             const idx = photos.findIndex(p => p.id === id);
             if (idx === -1) return;
             const updated = { ...photos[idx] };
             updated.title = title || '';
             updated.country = country.trim();
+            updated.state = state.trim();
             updated.city = city.trim();
             if (imageUrl) updated.image_url = imageUrl;
             photos[idx] = updated;
             const cats = rebuildCategories(photos);
             countries = cats.countries;
+            states = cats.states;
             savePhotos(photos);
             saveCountries(countries);
             syncToSupabase(photos).then(() => {
@@ -1785,6 +1857,7 @@
             photos = photos.filter(p => p.id !== id);
             const cats = rebuildCategories(photos);
             countries = cats.countries;
+            states = cats.states;
             savePhotos(photos);
             saveCountries(countries);
             syncToSupabase(photos).then(() => {
@@ -1797,6 +1870,7 @@
             photos = photos.filter(p => p.country !== name);
             const cats = rebuildCategories(photos);
             countries = cats.countries;
+            states = cats.states;
             savePhotos(photos);
             saveCountries(countries);
             syncToSupabase(photos).then(() => {
@@ -1813,6 +1887,7 @@
                 saveCountries(cats.countries);
                 photos = defaultPhotos;
                 countries = cats.countries;
+                states = cats.states;
                 syncToSupabase(photos).then(() => {
                     refreshAll();
                 });
@@ -1831,6 +1906,7 @@
             document.getElementById('formTitle').value = photo.title || '';
             document.getElementById('formImageUrl').value = photo.image_url || '';
             document.getElementById('formFile').value = '';
+            document.getElementById('formState').value = photo.state || '';
             document.getElementById('formCity').value = photo.city || '';
             populateFormSelects(photo.country);
             document.getElementById('editForm').classList.add('show');
@@ -1843,6 +1919,7 @@
             document.getElementById('formFile').value = '';
             document.getElementById('formImageUrl').value = '';
             document.getElementById('formTitle').value = '';
+            document.getElementById('formState').value = '';
             document.getElementById('formCity').value = '';
             document.getElementById('formCountry').value = '';
         }
@@ -1851,6 +1928,7 @@
             if (!isAuthorized) return;
             const title = document.getElementById('formTitle').value.trim();
             const country = document.getElementById('formCountry').value;
+            const state = document.getElementById('formState').value.trim();
             const city = document.getElementById('formCity').value.trim();
 
             if (!country) {
@@ -1868,9 +1946,9 @@
             if (imageUrlInput && !file) {
                 if (imageUrlInput.startsWith('http')) {
                     if (editingId) {
-                        updatePhoto(editingId, title, country, city, imageUrlInput);
+                        updatePhoto(editingId, title, country, state, city, imageUrlInput);
                     } else {
-                        addPhoto(title, country, city, imageUrlInput);
+                        addPhoto(title, country, state, city, imageUrlInput);
                     }
                     closeEditForm();
                     return;
@@ -1887,9 +1965,9 @@
                 uploadToCloudinary(file)
                     .then(url => {
                         if (editingId) {
-                            updatePhoto(editingId, title, country, city, url);
+                            updatePhoto(editingId, title, country, state, city, url);
                         } else {
-                            addPhoto(title, country, city, url);
+                            addPhoto(title, country, state, city, url);
                         }
                         status.textContent = '✅ 上传成功，数据已保存';
                         status.style.color = '#6fcf97';
@@ -1956,6 +2034,7 @@
             document.getElementById('formTitle').value = '';
             document.getElementById('formImageUrl').value = '';
             document.getElementById('formFile').value = '';
+            document.getElementById('formState').value = '';
             document.getElementById('formCity').value = '';
             populateFormSelects('');
             document.getElementById('editForm').classList.add('show');
@@ -1971,10 +2050,13 @@
         function refreshAll() {
             photos = loadPhotos() || [];
             countries = loadCountries() || ALL_COUNTRIES;
+            const cats = rebuildCategories(photos);
+            states = cats.states;
             if (photos.length === 0) {
                 photos = generateDefaultPhotos();
-                const cats = rebuildCategories(photos);
-                countries = cats.countries;
+                const newCats = rebuildCategories(photos);
+                countries = newCats.countries;
+                states = newCats.states;
                 savePhotos(photos);
                 saveCountries(countries);
             }
@@ -1993,11 +2075,15 @@
         async function init() {
             photos = initializeData();
             countries = loadCountries() || ALL_COUNTRIES;
+            const cats = rebuildCategories(photos);
+            states = cats.states;
             
             await fetchFromCloud();
             
             photos = loadPhotos() || photos;
             countries = loadCountries() || countries;
+            const newCats = rebuildCategories(photos);
+            states = newCats.states;
             
             renderWorks();
             showAuth();
@@ -2005,6 +2091,7 @@
             console.log('✨ kk\'s Photography 已加载');
             console.log('📸 照片总数:', photos.length);
             console.log('🌍 国家总数:', countries.length);
+            console.log('🏙️ 省份总数:', states.length);
             console.log('🔒 管理密码:', ADMIN_PASSWORD);
         }
 

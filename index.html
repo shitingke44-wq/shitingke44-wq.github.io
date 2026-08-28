@@ -6,7 +6,7 @@
     <title>kk's Photography</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <style>
-        /* ========== 全局重置 & 基础 ========== */
+        /* ========== 全局重置 & 白色基调 ========== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -117,7 +117,7 @@
             color: #fff;
         }
 
-        /* ---- 轮播 ---- */
+        /* 轮播 */
         .carousel {
             position: relative;
             width: 100%;
@@ -472,7 +472,7 @@
             background: rgba(255,255,255,0.2);
         }
 
-        /* ========== About 页 ========== */
+        /* ========== About 页（可保留） ========== */
         .about-content {
             max-width: 720px;
             margin: 40px auto;
@@ -487,7 +487,7 @@
             margin-bottom: 20px;
         }
 
-        /* ========== 管理面板（保留原有） ========== */
+        /* ========== 管理面板（深色，保留原有样式） ========== */
         .admin-panel {
             position: fixed;
             top: 0;
@@ -955,6 +955,7 @@
         const COUNTRY_KEY = 'kk_countries_list';
         const CITY_KEY = 'kk_cities_list';
 
+        // 默认示例数据（包含 location 字段）
         const DEFAULT_PHOTOS = [{
             id: 1,
             title: '故宫的晨光',
@@ -1402,7 +1403,7 @@
             const photos = loadPhotos();
             const slidesContainer = document.getElementById('carouselSlides');
             const dotsContainer = document.getElementById('carouselDots');
-            // 只取前6张作为展示（可自定义）
+            // 取前6张作为展示
             const carouselPhotos = photos.slice(0, 6);
             if (carouselPhotos.length === 0) {
                 slidesContainer.innerHTML = '<div class="slide" style="justify-content:center;color:#aaa;">暂无照片</div>';
@@ -1417,7 +1418,6 @@
             carouselIndex = 0;
             updateCarousel();
 
-            // 自动播放
             if (carouselInterval) clearInterval(carouselInterval);
             carouselInterval = setInterval(() => {
                 const total = carouselPhotos.length;
@@ -1425,13 +1425,11 @@
                 updateCarousel();
             }, 4000);
 
-            // 点击圆点切换
             dotsContainer.querySelectorAll('span').forEach(dot => {
                 dot.addEventListener('click', function() {
                     const idx = parseInt(this.dataset.index);
                     carouselIndex = idx;
                     updateCarousel();
-                    // 重置计时器
                     if (carouselInterval) {
                         clearInterval(carouselInterval);
                         carouselInterval = setInterval(() => {
@@ -1465,10 +1463,8 @@
             const filterSection = document.getElementById('filterSection');
             const grid = document.getElementById('photoGrid');
 
-            // 获取所有国家（从照片中提取）
             const countries = Array.from(new Set(photos.map(p => p.country))).sort();
 
-            // 如果未选择国家，显示国家列表
             if (!selectedCountry) {
                 filterSection.innerHTML = `
                     <span class="filter-label">国家：</span>
@@ -1488,12 +1484,10 @@
                         renderWorks();
                     });
                 });
-                // 显示所有照片（按城市分组或直接全部）
                 displayPhotos(photos, null);
                 return;
             }
 
-            // 已选择国家，显示该国家下的城市列表
             const cities = Array.from(new Set(photos.filter(p => p.country === selectedCountry).map(p => p.city))).sort();
 
             filterSection.innerHTML = `
@@ -1519,7 +1513,6 @@
                 });
             });
 
-            // 过滤照片
             let filtered = photos.filter(p => p.country === selectedCountry);
             if (selectedCity) {
                 filtered = filtered.filter(p => p.city === selectedCity);
@@ -1562,7 +1555,6 @@
             document.getElementById('modalCity').textContent = `${photo.country} · ${photo.city}`;
             document.getElementById('modalLocation').textContent = photo.location ? `📍 ${photo.location}` : '';
             document.getElementById('photoModal').classList.add('active');
-            // 保存当前照片id用于拍立得
             document.getElementById('photoModal').dataset.photoId = photo.id;
             document.body.style.overflow = 'hidden';
         }
@@ -1578,7 +1570,6 @@
             }
         });
 
-        // ---- 模态框中的拍立得按钮 ----
         document.getElementById('modalPrinterBtn').addEventListener('click', function() {
             const modal = document.getElementById('photoModal');
             const id = parseInt(modal.dataset.photoId);
@@ -1612,7 +1603,7 @@
         });
 
         // ================================================================
-        //  管理面板（保留原有逻辑 + location 字段）
+        //  管理面板
         // ================================================================
         let isAuthorized = false;
         const adminAuth = document.getElementById('adminAuth');
@@ -2042,7 +2033,6 @@
             if (document.getElementById('page-home').classList.contains('active')) {
                 initCarousel();
             }
-            // 更新模态框中的拍立得数据无影响
         }
 
         // ================================================================
@@ -2052,7 +2042,6 @@
             syncCategories();
             await loadFromSupabase();
             const photos = loadPhotos();
-            // 如果照片为空，写入默认
             if (photos.length === 0) {
                 savePhotos(DEFAULT_PHOTOS);
                 saveCountries(DEFAULT_COUNTRIES);
@@ -2061,7 +2050,6 @@
             }
             renderWorks();
             showAuth();
-            // 首页默认显示轮播
             setTimeout(initCarousel, 300);
             console.log('✨ kk\'s Photography 已加载 (Supabase + Cloudinary)');
             console.log('📸 照片总数:', loadPhotos().length);
@@ -2070,7 +2058,7 @@
 
         init();
 
-        // 当窗口大小变化时，重新初始化轮播（防止变形）
+        // 窗口尺寸变化时重置轮播
         window.addEventListener('resize', () => {
             if (document.getElementById('page-home').classList.contains('active')) {
                 initCarousel();

@@ -895,4 +895,1244 @@
                 </div>
                 <div class="form-actions">
                     <button class="save-btn" id="formSaveBtn">保存</button>
-                    <button class="cancel-btn" id="form
+                    <button class="cancel-btn" id="formCancelBtn">取消</button>
+                </div>
+            </div>
+            <div class="photo-list" id="adminPhotoList"></div>
+            <div class="category-section">
+                <h3><i class="fas fa-flag"></i> 国家管理</h3>
+                <div id="countryListAdmin"></div>
+                <div class="add-cat-form">
+                    <input type="text" id="newCountryInput" placeholder="输入国家名称" />
+                    <button id="addCountryBtn">添加国家</button>
+                </div>
+            </div>
+            <div class="category-section">
+                <h3><i class="fas fa-city"></i> 城市管理</h3>
+                <div id="cityListAdmin"></div>
+                <div class="add-cat-form">
+                    <select id="cityCountrySelect"><option value="">— 选择国家 —</option></select>
+                    <input type="text" id="newCityInput" placeholder="输入城市名称" />
+                    <button id="addCityBtn">添加城市</button>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <button id="addPhotoBtn"><i class="fas fa-plus"></i> 添加照片</button>
+                <button class="danger" id="resetDefaultBtn"><i class="fas fa-undo-alt"></i> 恢复默认示例</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  🔑 配置（Supabase + Cloudinary）
+        // ================================================================
+        const SUPABASE_URL = 'https://kmotdlbyadsfvoqeyosu.supabase.co/rest/v1/';
+        const SUPABASE_KEY = 'sb_publishable_ja7rUD-fbI0XyC_qPbWajQ_vozvfZmD';
+        const CLOUD_NAME = 'e33jixhq';   // 请替换为您的 Cloudinary cloud name
+        const UPLOAD_PRESET = 'my_website'; // 请替换为您的 Cloudinary upload preset
+
+        const ADMIN_PASSWORD = 'kst2142600396';
+
+        // ================================================================
+        //  数据管理（localStorage + Supabase 同步）
+        // ================================================================
+        const STORAGE_KEY = 'kk_photos_data';
+        const COUNTRY_KEY = 'kk_countries_list';
+        const CITY_KEY = 'kk_cities_list';
+
+        // 默认示例数据（不含 location，字段 image_url）
+        const DEFAULT_PHOTOS = [{
+            id: 1,
+            title: '故宫的晨光',
+            country: '中国',
+            city: '北京',
+            image_url: 'https://picsum.photos/seed/beijing1/800/600'
+        }, {
+            id: 2,
+            title: '胡同里的猫',
+            country: '中国',
+            city: '北京',
+            image_url: 'https://picsum.photos/seed/beijing2/800/600'
+        }, {
+            id: 3,
+            title: '国贸日落',
+            country: '中国',
+            city: '北京',
+            image_url: 'https://picsum.photos/seed/beijing3/800/600'
+        }, {
+            id: 4,
+            title: '后海夜色',
+            country: '中国',
+            city: '北京',
+            image_url: 'https://picsum.photos/seed/beijing4/800/600'
+        }, {
+            id: 5,
+            title: '外滩风云',
+            country: '中国',
+            city: '上海',
+            image_url: 'https://picsum.photos/seed/shanghai1/800/600'
+        }, {
+            id: 6,
+            title: '弄堂光影',
+            country: '中国',
+            city: '上海',
+            image_url: 'https://picsum.photos/seed/shanghai2/800/600'
+        }, {
+            id: 7,
+            title: '陆家嘴之夜',
+            country: '中国',
+            city: '上海',
+            image_url: 'https://picsum.photos/seed/shanghai3/800/600'
+        }, {
+            id: 8,
+            title: '武康路转角',
+            country: '中国',
+            city: '上海',
+            image_url: 'https://picsum.photos/seed/shanghai4/800/600'
+        }, {
+            id: 9,
+            title: '珠江漫步',
+            country: '中国',
+            city: '广州',
+            image_url: 'https://picsum.photos/seed/guangzhou1/800/600'
+        }, {
+            id: 10,
+            title: '沙面老建筑',
+            country: '中国',
+            city: '广州',
+            image_url: 'https://picsum.photos/seed/guangzhou2/800/600'
+        }, {
+            id: 11,
+            title: '广州塔云端',
+            country: '中国',
+            city: '广州',
+            image_url: 'https://picsum.photos/seed/guangzhou3/800/600'
+        }, {
+            id: 12,
+            title: '深圳湾日落',
+            country: '中国',
+            city: '深圳',
+            image_url: 'https://picsum.photos/seed/shenzhen1/800/600'
+        }, {
+            id: 13,
+            title: '华侨城创意园',
+            country: '中国',
+            city: '深圳',
+            image_url: 'https://picsum.photos/seed/shenzhen2/800/600'
+        }, {
+            id: 14,
+            title: '梧桐山远眺',
+            country: '中国',
+            city: '深圳',
+            image_url: 'https://picsum.photos/seed/shenzhen3/800/600'
+        }, {
+            id: 15,
+            title: '西湖晨雾',
+            country: '中国',
+            city: '杭州',
+            image_url: 'https://picsum.photos/seed/hangzhou1/800/600'
+        }, {
+            id: 16,
+            title: '断桥残雪',
+            country: '中国',
+            city: '杭州',
+            image_url: 'https://picsum.photos/seed/hangzhou2/800/600'
+        }, {
+            id: 17,
+            title: '龙井茶园',
+            country: '中国',
+            city: '杭州',
+            image_url: 'https://picsum.photos/seed/hangzhou3/800/600'
+        }, {
+            id: 18,
+            title: '宽窄巷子',
+            country: '中国',
+            city: '成都',
+            image_url: 'https://picsum.photos/seed/chengdu1/800/600'
+        }, {
+            id: 19,
+            title: '锦里夜色',
+            country: '中国',
+            city: '成都',
+            image_url: 'https://picsum.photos/seed/chengdu2/800/600'
+        }, {
+            id: 20,
+            title: '大熊猫基地',
+            country: '中国',
+            city: '成都',
+            image_url: 'https://picsum.photos/seed/chengdu3/800/600'
+        }, {
+            id: 21,
+            title: '洪崖洞夜景',
+            country: '中国',
+            city: '重庆',
+            image_url: 'https://picsum.photos/seed/chongqing1/800/600'
+        }, {
+            id: 22,
+            title: '山城步道',
+            country: '中国',
+            city: '重庆',
+            image_url: 'https://picsum.photos/seed/chongqing2/800/600'
+        }, {
+            id: 23,
+            title: '长江索道',
+            country: '中国',
+            city: '重庆',
+            image_url: 'https://picsum.photos/seed/chongqing3/800/600'
+        }, {
+            id: 24,
+            title: '钟楼暮色',
+            country: '中国',
+            city: '西安',
+            image_url: 'https://picsum.photos/seed/xian1/800/600'
+        }, {
+            id: 25,
+            title: '城墙根下',
+            country: '中国',
+            city: '西安',
+            image_url: 'https://picsum.photos/seed/xian2/800/600'
+        }, {
+            id: 26,
+            title: '大唐不夜城',
+            country: '中国',
+            city: '西安',
+            image_url: 'https://picsum.photos/seed/xian3/800/600'
+        }];
+        const DEFAULT_COUNTRIES = ['中国'];
+        const DEFAULT_CITIES = [{ country: '中国', city: '北京' }, { country: '中国', city: '上海' }, { country: '中国', city: '广州' },
+            { country: '中国', city: '深圳' }, { country: '中国', city: '杭州' }, { country: '中国', city: '成都' },
+            { country: '中国', city: '重庆' }, { country: '中国', city: '西安' }
+        ];
+
+        // ---- 本地存储辅助 ----
+        function loadPhotos() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    const data = JSON.parse(stored);
+                    if (Array.isArray(data) && data.length) return data;
+                } catch (e) {}
+            }
+            return null;
+        }
+
+        function savePhotos(photos) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(photos));
+        }
+
+        function loadCountries() {
+            const stored = localStorage.getItem(COUNTRY_KEY);
+            if (stored) {
+                try {
+                    const data = JSON.parse(stored);
+                    if (Array.isArray(data)) return data;
+                } catch (e) {}
+            }
+            return null;
+        }
+
+        function saveCountries(countries) {
+            localStorage.setItem(COUNTRY_KEY, JSON.stringify(countries));
+        }
+
+        function loadCities() {
+            const stored = localStorage.getItem(CITY_KEY);
+            if (stored) {
+                try {
+                    const data = JSON.parse(stored);
+                    if (Array.isArray(data)) return data;
+                } catch (e) {}
+            }
+            return null;
+        }
+
+        function saveCities(cities) {
+            localStorage.setItem(CITY_KEY, JSON.stringify(cities));
+        }
+
+        // ---- 辅助函数（从照片中重建分类） ----
+        function rebuildCategories(photos) {
+            const countrySet = new Set();
+            const citySet = new Set();
+            photos.forEach(p => {
+                if (p.country) countrySet.add(p.country);
+                if (p.country && p.city) {
+                    citySet.add(JSON.stringify({ country: p.country, city: p.city }));
+                }
+            });
+            return {
+                countries: Array.from(countrySet).sort(),
+                cities: Array.from(citySet).map(s => JSON.parse(s)).sort((a, b) =>
+                    a.country.localeCompare(b.country) || a.city.localeCompare(b.city)
+                )
+            };
+        }
+
+        // ---- 全局数据变量 ----
+        let photos = [];
+        let countries = [];
+        let cities = [];
+
+        // ---- 初始化或刷新数据 ----
+        function loadAllData() {
+            photos = loadPhotos() || [];
+            countries = loadCountries() || [];
+            cities = loadCities() || [];
+            if (photos.length === 0) {
+                photos = DEFAULT_PHOTOS.slice();
+                const cats = rebuildCategories(photos);
+                countries = cats.countries;
+                cities = cats.cities;
+                savePhotos(photos);
+                saveCountries(countries);
+                saveCities(cities);
+            }
+        }
+
+        // ---- 强制从云端拉取 ----
+        async function fetchFromCloud() {
+            const statusEl = document.getElementById('syncStatus');
+            if (statusEl) {
+                statusEl.textContent = '⏳ 正在从云端加载...';
+                statusEl.style.color = '#d4a574';
+            }
+            try {
+                const res = await fetch(`${SUPABASE_URL}photos?select=*`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                if (!res.ok) throw new Error(`读取云端失败 (${res.status})`);
+                const data = await res.json();
+                if (data.length > 0) {
+                    const cloudPhotos = data.map(record => ({
+                        id: record.id,
+                        title: record.title || '',
+                        country: record.country || '',
+                        city: record.city || '',
+                        image_url: record.image_url || ''
+                    }));
+                    savePhotos(cloudPhotos);
+                    const cats = rebuildCategories(cloudPhotos);
+                    saveCountries(cats.countries);
+                    saveCities(cats.cities);
+                    photos = cloudPhotos;
+                    countries = cats.countries;
+                    cities = cats.cities;
+                    if (statusEl) {
+                        statusEl.textContent = '✅ 已从云端同步';
+                        statusEl.style.color = '#6fcf97';
+                    }
+                    return true;
+                } else {
+                    // 云端无数据，上传默认
+                    const cats = rebuildCategories(DEFAULT_PHOTOS);
+                    savePhotos(DEFAULT_PHOTOS);
+                    saveCountries(cats.countries);
+                    saveCities(cats.cities);
+                    photos = DEFAULT_PHOTOS.slice();
+                    countries = cats.countries;
+                    cities = cats.cities;
+                    await syncToSupabase(photos);
+                    if (statusEl) {
+                        statusEl.textContent = '✅ 已同步到云端';
+                        statusEl.style.color = '#6fcf97';
+                    }
+                    return true;
+                }
+            } catch (error) {
+                console.warn('云端加载失败，使用本地数据', error);
+                if (statusEl) {
+                    statusEl.textContent = '⚠️ 云端加载失败，使用本地数据';
+                    statusEl.style.color = '#e05a5a';
+                }
+                loadAllData();
+                return false;
+            }
+        }
+
+        // ---- 同步到 Supabase（不包含 id，让数据库自动生成） ----
+        async function syncToSupabase(photosToSync) {
+            const statusEl = document.getElementById('syncStatus');
+            if (statusEl) {
+                statusEl.textContent = '⏳ 正在同步到云端...';
+                statusEl.style.color = '#d4a574';
+            }
+            try {
+                // 1. 获取现有记录
+                const listRes = await fetch(`${SUPABASE_URL}photos?select=id`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                if (!listRes.ok) throw new Error(`获取云端列表失败 (${listRes.status})`);
+                const existing = await listRes.json();
+
+                // 2. 删除所有记录（逐条删除）
+                for (const item of existing) {
+                    const delRes = await fetch(`${SUPABASE_URL}photos?id=eq.${item.id}`, {
+                        method: 'DELETE',
+                        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                    });
+                    if (!delRes.ok) {
+                        console.warn(`删除记录 ${item.id} 失败: ${delRes.status}`);
+                    }
+                }
+
+                // 3. 批量插入新数据（不包含 id）
+                const dataToInsert = photosToSync.map(p => ({
+                    title: p.title || '',
+                    country: p.country || '',
+                    city: p.city || '',
+                    image_url: p.image_url || ''
+                }));
+                for (const p of dataToInsert) {
+                    const postRes = await fetch(`${SUPABASE_URL}photos`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(p)
+                    });
+                    if (!postRes.ok) {
+                        const errText = await postRes.text();
+                        throw new Error(`插入记录失败 (${postRes.status}): ${errText}`);
+                    }
+                }
+
+                // 4. 从云端重新拉取最新数据（获取数据库生成的 id）
+                const fetchRes = await fetch(`${SUPABASE_URL}photos?select=*`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                if (!fetchRes.ok) throw new Error(`拉取云端数据失败 (${fetchRes.status})`);
+                const cloudData = await fetchRes.json();
+                const updatedPhotos = cloudData.map(record => ({
+                    id: record.id,
+                    title: record.title || '',
+                    country: record.country || '',
+                    city: record.city || '',
+                    image_url: record.image_url || ''
+                }));
+
+                // 5. 更新本地缓存
+                savePhotos(updatedPhotos);
+                const cats = rebuildCategories(updatedPhotos);
+                saveCountries(cats.countries);
+                saveCities(cats.cities);
+                photos = updatedPhotos;
+                countries = cats.countries;
+                cities = cats.cities;
+
+                if (statusEl) {
+                    statusEl.textContent = '✅ 已同步到云端';
+                    statusEl.style.color = '#6fcf97';
+                }
+                return true;
+            } catch (error) {
+                console.error('Supabase 同步失败', error);
+                if (statusEl) {
+                    statusEl.textContent = '⚠️ 云端同步失败：' + error.message;
+                    statusEl.style.color = '#e05a5a';
+                }
+                return false;
+            }
+        }
+
+        // ---- Cloudinary 上传 ----
+        function uploadToCloudinary(file) {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', UPLOAD_PRESET);
+                fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.secure_url) resolve(data.secure_url);
+                        else reject(new Error('Cloudinary 返回错误：' + JSON.stringify(data)));
+                    })
+                    .catch(err => reject(err));
+            });
+        }
+
+        // ================================================================
+        //  核心功能（页面导航、渲染、管理）
+        // ================================================================
+
+        // ---- 页面导航 ----
+        const pages = {
+            home: document.getElementById('page-home'),
+            works: document.getElementById('page-works'),
+            about: document.getElementById('page-about')
+        };
+        const navLinks = document.querySelectorAll('.nav-links a');
+
+        function showPage(pageId) {
+            Object.keys(pages).forEach(key => {
+                pages[key].classList.toggle('active', key === pageId);
+            });
+            navLinks.forEach(link => {
+                link.classList.toggle('active', link.dataset.page === pageId);
+            });
+            if (pageId === 'works') renderWorks();
+            if (pageId === 'home') initCarousel();
+        }
+
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showPage(link.dataset.page);
+            });
+        });
+
+        document.getElementById('enterGallery').addEventListener('click', () => showPage('works'));
+
+        // ---- 轮播 ----
+        let carouselInterval = null;
+        let carouselIndex = 0;
+
+        function initCarousel() {
+            const slidesContainer = document.getElementById('carouselSlides');
+            const dotsContainer = document.getElementById('carouselDots');
+            const carouselPhotos = photos.slice(0, 6);
+            if (carouselPhotos.length === 0) {
+                slidesContainer.innerHTML = '<div class="slide" style="justify-content:center;color:#aaa;">暂无照片</div>';
+                return;
+            }
+            slidesContainer.innerHTML = carouselPhotos.map((p, i) =>
+                `<div class="slide"><img src="${p.image_url}" alt="${p.title}" /></div>`
+            ).join('');
+            dotsContainer.innerHTML = carouselPhotos.map((_, i) =>
+                `<span class="${i===0?'active':''}" data-index="${i}"></span>`
+            ).join('');
+            carouselIndex = 0;
+            updateCarousel();
+
+            if (carouselInterval) clearInterval(carouselInterval);
+            carouselInterval = setInterval(() => {
+                const total = carouselPhotos.length;
+                carouselIndex = (carouselIndex + 1) % total;
+                updateCarousel();
+            }, 4000);
+
+            dotsContainer.querySelectorAll('span').forEach(dot => {
+                dot.addEventListener('click', function() {
+                    const idx = parseInt(this.dataset.index);
+                    carouselIndex = idx;
+                    updateCarousel();
+                    if (carouselInterval) {
+                        clearInterval(carouselInterval);
+                        carouselInterval = setInterval(() => {
+                            const total = carouselPhotos.length;
+                            carouselIndex = (carouselIndex + 1) % total;
+                            updateCarousel();
+                        }, 4000);
+                    }
+                });
+            });
+        }
+
+        function updateCarousel() {
+            const slides = document.getElementById('carouselSlides');
+            const dots = document.getElementById('carouselDots').querySelectorAll('span');
+            if (!slides || dots.length === 0) return;
+            slides.style.transform = `translateX(-${carouselIndex * 100}%)`;
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === carouselIndex);
+            });
+        }
+
+        // ---- 作品页渲染 ----
+        let selectedCountry = null;
+        let selectedCity = null;
+
+        function renderWorks() {
+            const filterSection = document.getElementById('filterSection');
+            const grid = document.getElementById('photoGrid');
+
+            const countrySet = new Set(photos.map(p => p.country));
+            const countryList = Array.from(countrySet).sort();
+
+            if (!selectedCountry) {
+                filterSection.innerHTML = `
+                    <span class="filter-label">国家：</span>
+                    <button class="filter-btn active" data-country="all">全部</button>
+                    ${countryList.map(c => `<button class="filter-btn" data-country="${c}">${c}</button>`).join('')}
+                `;
+                filterSection.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const country = this.dataset.country;
+                        if (country === 'all') {
+                            selectedCountry = null;
+                            selectedCity = null;
+                        } else {
+                            selectedCountry = country;
+                            selectedCity = null;
+                        }
+                        renderWorks();
+                    });
+                });
+                displayPhotos(photos, null);
+                return;
+            }
+
+            const citiesInCountry = Array.from(new Set(
+                photos.filter(p => p.country === selectedCountry).map(p => p.city)
+            )).sort();
+
+            filterSection.innerHTML = `
+                <button class="filter-back" id="backToCountries"><i class="fas fa-arrow-left"></i> 返回国家</button>
+                <span class="filter-label">城市：</span>
+                <button class="filter-btn city-btn active" data-city="all">全部</button>
+                ${citiesInCountry.map(c => `<button class="filter-btn city-btn" data-city="${c}">${c}</button>`).join('')}
+            `;
+            filterSection.querySelector('#backToCountries').addEventListener('click', function() {
+                selectedCountry = null;
+                selectedCity = null;
+                renderWorks();
+            });
+            filterSection.querySelectorAll('.city-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const city = this.dataset.city;
+                    if (city === 'all') {
+                        selectedCity = null;
+                    } else {
+                        selectedCity = city;
+                    }
+                    renderWorks();
+                });
+            });
+
+            let filtered = photos.filter(p => p.country === selectedCountry);
+            if (selectedCity) {
+                filtered = filtered.filter(p => p.city === selectedCity);
+            }
+            displayPhotos(filtered, selectedCity);
+        }
+
+        function displayPhotos(photosToShow) {
+            const grid = document.getElementById('photoGrid');
+            if (photosToShow.length === 0) {
+                grid.innerHTML = `<div class="empty-state">没有找到照片</div>`;
+                return;
+            }
+            grid.innerHTML = photosToShow.map(p => `
+                <div class="grid-item" data-id="${p.id}">
+                    <img src="${p.image_url}" alt="${p.title}" loading="lazy" />
+                    <div class="overlay">
+                        <div class="title">${p.title}</div>
+                        <div class="city">${p.country} · ${p.city}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            grid.querySelectorAll('.grid-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const id = parseInt(this.dataset.id);
+                    openPhotoModal(id);
+                });
+            });
+        }
+
+        // ---- 照片详情模态框 ----
+        function openPhotoModal(id) {
+            const photo = photos.find(p => p.id === id);
+            if (!photo) return;
+            document.getElementById('modalImage').src = photo.image_url;
+            document.getElementById('modalTitle').textContent = photo.title || '';
+            document.getElementById('modalCity').textContent = `${photo.country} · ${photo.city}`;
+            document.getElementById('photoModal').classList.add('active');
+            document.getElementById('photoModal').dataset.photoId = photo.id;
+            document.body.style.overflow = 'hidden';
+        }
+
+        document.getElementById('modalClose').addEventListener('click', function() {
+            document.getElementById('photoModal').classList.remove('active');
+            document.body.style.overflow = '';
+        });
+        document.getElementById('photoModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+
+        document.getElementById('modalPrinterBtn').addEventListener('click', function() {
+            const modal = document.getElementById('photoModal');
+            const id = parseInt(modal.dataset.photoId);
+            if (!id) return;
+            const photo = photos.find(p => p.id === id);
+            if (!photo) return;
+            showPolaroid(photo);
+        });
+
+        // ---- 拍立得 ----
+        function showPolaroid(photo) {
+            document.getElementById('polaroidImg').src = photo.image_url;
+            document.getElementById('polaroidTitle').textContent = photo.title || '';
+            document.getElementById('polaroidCity').textContent = `${photo.country} · ${photo.city}`;
+            document.getElementById('polaroidFullscreen').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        document.getElementById('polaroidClose').addEventListener('click', function() {
+            document.getElementById('polaroidFullscreen').classList.remove('active');
+            document.body.style.overflow = '';
+        });
+        document.getElementById('polaroidFullscreen').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+
+        // ---- 管理面板 ----
+        let isAuthorized = false;
+        const adminAuth = document.getElementById('adminAuth');
+        const adminContent = document.getElementById('adminContent');
+        const authPassword = document.getElementById('authPassword');
+        const authSubmitBtn = document.getElementById('authSubmitBtn');
+        const authError = document.getElementById('authError');
+
+        function showAuth() {
+            adminAuth.style.display = 'flex';
+            adminContent.classList.remove('visible');
+            authPassword.value = '';
+            authError.textContent = '';
+            isAuthorized = false;
+        }
+
+        function authorize() {
+            const pwd = authPassword.value.trim();
+            if (pwd === ADMIN_PASSWORD) {
+                isAuthorized = true;
+                adminAuth.style.display = 'none';
+                adminContent.classList.add('visible');
+                authError.textContent = '';
+                loadAdminData();
+            } else {
+                authError.textContent = '❌ 密码错误，请重试';
+                authPassword.value = '';
+                authPassword.focus();
+            }
+        }
+
+        authPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') authorize(); });
+        authSubmitBtn.addEventListener('click', authorize);
+
+        const adminToggle = document.getElementById('adminToggle');
+        const adminPanel = document.getElementById('adminPanel');
+        const adminClose = document.getElementById('adminClose');
+
+        adminToggle.addEventListener('click', () => {
+            adminPanel.classList.toggle('open');
+            if (adminPanel.classList.contains('open')) showAuth();
+        });
+        adminClose.addEventListener('click', () => {
+            adminPanel.classList.remove('open');
+            isAuthorized = false;
+            adminContent.classList.remove('visible');
+            adminAuth.style.display = 'flex';
+            authPassword.value = '';
+            authError.textContent = '';
+            closeEditForm();
+        });
+
+        // ---- 管理数据加载 ----
+        function loadAdminData() {
+            if (!isAuthorized) return;
+            renderAdminList();
+            renderCountryAdminList();
+            renderCityAdminList();
+            populateCountrySelect();
+            populateFormSelects('', '');
+            closeEditForm();
+        }
+
+        function renderAdminList() {
+            const list = document.getElementById('adminPhotoList');
+            if (photos.length === 0) {
+                list.innerHTML = `<div style="color:#666;text-align:center;padding:30px;">暂无照片，点击 "添加照片" 上传</div>`;
+                return;
+            }
+            list.innerHTML = photos.map(p => `
+                <div class="photo-item" data-id="${p.id}">
+                    <img class="thumb" src="${p.image_url}" alt="${p.title}" />
+                    <div class="info">
+                        <div class="item-title">${p.title}</div>
+                        <div class="item-city">${p.country} · ${p.city}</div>
+                    </div>
+                    <div class="actions">
+                        <button class="edit-btn" data-id="${p.id}">✏️ 编辑</button>
+                        <button class="del-btn" data-id="${p.id}">🗑️ 删除</button>
+                    </div>
+                </div>
+            `).join('');
+
+            list.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = parseInt(this.dataset.id);
+                    openEditForm(id);
+                });
+            });
+            list.querySelectorAll('.del-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const id = parseInt(this.dataset.id);
+                    if (confirm('确定删除这张照片吗？')) {
+                        deletePhoto(id);
+                    }
+                });
+            });
+        }
+
+        function renderCountryAdminList() {
+            const list = document.getElementById('countryListAdmin');
+            if (countries.length === 0) {
+                list.innerHTML = `<div style="color:#666;font-size:13px;padding:4px 0;">暂无国家</div>`;
+                return;
+            }
+            list.innerHTML = countries.map(c => {
+                const count = photos.filter(p => p.country === c).length;
+                return `
+                    <div class="cat-item">
+                        <span><span class="cat-name">${c}</span> <span class="cat-count">（${count} 张）</span></span>
+                        <button class="del-cat-btn" data-country="${c}">删除</button>
+                    </div>
+                `;
+            }).join('');
+            list.querySelectorAll('.del-cat-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const country = this.dataset.country;
+                    if (confirm(`确定删除国家“${country}”及其所有照片吗？此操作不可撤销！`)) {
+                        deleteCountry(country);
+                    }
+                });
+            });
+            populateCountrySelect();
+        }
+
+        function renderCityAdminList() {
+            const list = document.getElementById('cityListAdmin');
+            if (cities.length === 0) {
+                list.innerHTML = `<div style="color:#666;font-size:13px;padding:4px 0;">暂无城市</div>`;
+                return;
+            }
+            let html = '';
+            countries.forEach(country => {
+                const citiesInCountry = cities.filter(c => c.country === country);
+                if (citiesInCountry.length === 0) return;
+                html += `<div style="margin-top:4px;color:#888;font-size:12px;">${country}</div>`;
+                citiesInCountry.forEach(c => {
+                    const count = photos.filter(p => p.country === country && p.city === c.city).length;
+                    html += `
+                        <div class="cat-item" style="padding-left:16px;">
+                            <span><span class="cat-name">${c.city}</span> <span class="cat-count">（${count} 张）</span></span>
+                            <button class="del-cat-btn" data-country="${country}" data-city="${c.city}">删除</button>
+                        </div>
+                    `;
+                });
+            });
+            list.innerHTML = html;
+            list.querySelectorAll('.del-cat-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const country = this.dataset.country;
+                    const city = this.dataset.city;
+                    if (confirm(`确定删除城市“${city}”（${country}）及其所有照片吗？此操作不可撤销！`)) {
+                        deleteCity(country, city);
+                    }
+                });
+            });
+        }
+
+        // ---- CRUD 操作 ----
+        function addPhoto(title, country, city, imageUrl) {
+            const newPhoto = {
+                id: 0,  // 临时占位，同步后会被云端生成的真实 id 替换
+                title: title || '',
+                country: country.trim(),
+                city: city.trim(),
+                image_url: imageUrl
+            };
+            photos.push(newPhoto);
+            const cats = rebuildCategories(photos);
+            countries = cats.countries;
+            cities = cats.cities;
+            savePhotos(photos);
+            saveCountries(countries);
+            saveCities(cities);
+            syncToSupabase(photos).then(() => {
+                refreshAll();
+            });
+            refreshAll();
+        }
+
+        function updatePhoto(id, title, country, city, imageUrl) {
+            const idx = photos.findIndex(p => p.id === id);
+            if (idx === -1) return;
+            const updated = { ...photos[idx] };
+            updated.title = title || '';
+            updated.country = country.trim();
+            updated.city = city.trim();
+            if (imageUrl) updated.image_url = imageUrl;
+            photos[idx] = updated;
+            const cats = rebuildCategories(photos);
+            countries = cats.countries;
+            cities = cats.cities;
+            savePhotos(photos);
+            saveCountries(countries);
+            saveCities(cities);
+            syncToSupabase(photos).then(() => {
+                refreshAll();
+            });
+            refreshAll();
+        }
+
+        function deletePhoto(id) {
+            photos = photos.filter(p => p.id !== id);
+            const cats = rebuildCategories(photos);
+            countries = cats.countries;
+            cities = cats.cities;
+            savePhotos(photos);
+            saveCountries(countries);
+            saveCities(cities);
+            syncToSupabase(photos).then(() => {
+                refreshAll();
+            });
+            refreshAll();
+            if (currentPhotoId === id) closeModal();
+        }
+
+        function deleteCountry(name) {
+            photos = photos.filter(p => p.country !== name);
+            const cats = rebuildCategories(photos);
+            countries = cats.countries;
+            cities = cats.cities;
+            savePhotos(photos);
+            saveCountries(countries);
+            saveCities(cities);
+            syncToSupabase(photos).then(() => {
+                refreshAll();
+            });
+            refreshAll();
+        }
+
+        function deleteCity(country, city) {
+            photos = photos.filter(p => !(p.country === country && p.city === city));
+            const cats = rebuildCategories(photos);
+            countries = cats.countries;
+            cities = cats.cities;
+            savePhotos(photos);
+            saveCountries(countries);
+            saveCities(cities);
+            syncToSupabase(photos).then(() => {
+                refreshAll();
+            });
+            refreshAll();
+        }
+
+        function resetToDefault() {
+            if (confirm('将恢复默认示例照片，当前数据将被覆盖，确定吗？')) {
+                photos = DEFAULT_PHOTOS.slice();
+                const cats = rebuildCategories(photos);
+                countries = cats.countries;
+                cities = cats.cities;
+                savePhotos(photos);
+                saveCountries(countries);
+                saveCities(cities);
+                syncToSupabase(photos).then(() => {
+                    refreshAll();
+                });
+                refreshAll();
+                closeModal();
+            }
+        }
+
+        // ---- 表单处理 ----
+        let editingId = null;
+
+        function openEditForm(id) {
+            if (!isAuthorized) return;
+            editingId = id;
+            const photo = photos.find(p => p.id === id);
+            if (!photo) return;
+            document.getElementById('formTitle').value = photo.title || '';
+            document.getElementById('formImageUrl').value = photo.image_url || '';
+            document.getElementById('formFile').value = '';
+            populateFormSelects(photo.country, photo.city);
+            document.getElementById('editForm').classList.add('show');
+            document.getElementById('editForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function closeEditForm() {
+            document.getElementById('editForm').classList.remove('show');
+            editingId = null;
+            document.getElementById('formFile').value = '';
+            document.getElementById('formImageUrl').value = '';
+            document.getElementById('formTitle').value = '';
+            document.getElementById('formCountry').value = '';
+            document.getElementById('formCity').innerHTML = `<option value="">— 请先选择国家 —</option>`;
+        }
+
+        function saveForm() {
+            if (!isAuthorized) return;
+            const title = document.getElementById('formTitle').value.trim();
+            const country = document.getElementById('formCountry').value;
+            const city = document.getElementById('formCity').value;
+
+            if (!country || !city) {
+                alert('国家和城市不能为空');
+                return;
+            }
+
+            const file = document.getElementById('formFile').files[0];
+            const imageUrlInput = document.getElementById('formImageUrl').value.trim();
+
+            if (imageUrlInput && !file) {
+                if (imageUrlInput.startsWith('http')) {
+                    if (editingId) {
+                        updatePhoto(editingId, title, country, city, imageUrlInput);
+                    } else {
+                        addPhoto(title, country, city, imageUrlInput);
+                    }
+                    closeEditForm();
+                    return;
+                } else {
+                    alert('请输入有效的图片链接（以 http 开头）');
+                    return;
+                }
+            }
+
+            if (file) {
+                const status = document.getElementById('syncStatus');
+                status.textContent = '⏳ 正在上传到 Cloudinary...';
+                status.style.color = '#d4a574';
+                uploadToCloudinary(file)
+                    .then(url => {
+                        if (editingId) {
+                            updatePhoto(editingId, title, country, city, url);
+                        } else {
+                            addPhoto(title, country, city, url);
+                        }
+                        status.textContent = '✅ 上传成功，数据已保存';
+                        status.style.color = '#6fcf97';
+                        closeEditForm();
+                    })
+                    .catch(err => {
+                        console.error('上传失败', err);
+                        status.textContent = '❌ 上传失败：' + err.message;
+                        status.style.color = '#e05a5a';
+                        alert('照片上传失败，请检查网络或 Cloudinary 配置');
+                    });
+                return;
+            }
+
+            alert('请选择一张照片或输入图片链接');
+        }
+
+        function populateFormSelects(selectedCountry, selectedCity) {
+            const formCountry = document.getElementById('formCountry');
+            formCountry.innerHTML = `<option value="">— 选择国家 —</option>`;
+            countries.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                if (c === selectedCountry) opt.selected = true;
+                formCountry.appendChild(opt);
+            });
+            populateCitySelect(selectedCountry, selectedCity);
+        }
+
+        function populateCitySelect(country, selectedCity) {
+            const formCity = document.getElementById('formCity');
+            formCity.innerHTML = `<option value="">— 请先选择国家 —</option>`;
+            if (!country) return;
+            const citiesInCountry = cities.filter(c => c.country === country).map(c => c.city);
+            citiesInCountry.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                if (c === selectedCity) opt.selected = true;
+                formCity.appendChild(opt);
+            });
+        }
+
+        function populateCountrySelect() {
+            const select = document.getElementById('cityCountrySelect');
+            const currentVal = select.value;
+            select.innerHTML = `<option value="">— 选择国家 —</option>`;
+            countries.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                select.appendChild(opt);
+            });
+            if (currentVal && countries.includes(currentVal)) {
+                select.value = currentVal;
+            }
+        }
+
+        // ---- 监听事件 ----
+        document.getElementById('formCountry').addEventListener('change', function() {
+            const country = this.value;
+            populateCitySelect(country, '');
+        });
+
+        document.getElementById('addCountryBtn').addEventListener('click', function() {
+            if (!isAuthorized) return;
+            const input = document.getElementById('newCountryInput');
+            const name = input.value.trim();
+            if (!name) return alert('请输入国家名称');
+            if (countries.includes(name)) return alert('国家已存在');
+            countries.push(name);
+            countries.sort();
+            saveCountries(countries);
+            refreshAll();
+            input.value = '';
+        });
+
+        document.getElementById('addCityBtn').addEventListener('click', function() {
+            if (!isAuthorized) return;
+            const country = document.getElementById('cityCountrySelect').value;
+            const cityName = document.getElementById('newCityInput').value.trim();
+            if (!country) return alert('请选择国家');
+            if (!cityName) return alert('请输入城市名称');
+            if (cities.some(c => c.country === country && c.city === cityName)) {
+                return alert('该城市已存在');
+            }
+            cities.push({ country, city: cityName });
+            cities.sort((a, b) => a.country.localeCompare(b.country) || a.city.localeCompare(b.city));
+            saveCities(cities);
+            refreshAll();
+            document.getElementById('newCityInput').value = '';
+        });
+
+        document.getElementById('addPhotoBtn').addEventListener('click', function() {
+            if (!isAuthorized) return;
+            editingId = null;
+            document.getElementById('formTitle').value = '';
+            document.getElementById('formImageUrl').value = '';
+            document.getElementById('formFile').value = '';
+            populateFormSelects('', '');
+            document.getElementById('editForm').classList.add('show');
+            document.getElementById('formTitle').focus();
+        });
+
+        document.getElementById('formCancelBtn').addEventListener('click', closeEditForm);
+        document.getElementById('formSaveBtn').addEventListener('click', saveForm);
+
+        document.getElementById('resetDefaultBtn').addEventListener('click', resetToDefault);
+
+        // ---- 刷新全部UI ----
+        function refreshAll() {
+            photos = loadPhotos() || [];
+            countries = loadCountries() || [];
+            cities = loadCities() || [];
+            if (photos.length === 0) {
+                photos = DEFAULT_PHOTOS.slice();
+                const cats = rebuildCategories(photos);
+                countries = cats.countries;
+                cities = cats.cities;
+                savePhotos(photos);
+                saveCountries(countries);
+                saveCities(cities);
+            }
+            renderCityButtons();
+            renderWorks();
+            if (document.getElementById('page-home').classList.contains('active')) {
+                initCarousel();
+            }
+            if (isAuthorized) {
+                renderAdminList();
+                renderCountryAdminList();
+                renderCityAdminList();
+                populateCountrySelect();
+                if (editingId !== null) {
+                    const photo = photos.find(p => p.id === editingId);
+                    if (photo) populateFormSelects(photo.country, photo.city);
+                    else populateFormSelects('', '');
+                } else {
+                    populateFormSelects('', '');
+                }
+            }
+        }
+
+        // ---- 渲染导航城市按钮 ----
+        function renderCityButtons() {
+            const filter = document.getElementById('cityFilter');
+            const allBtn = filter.querySelector('.all-btn');
+            filter.querySelectorAll('.city-btn:not(.all-btn)').forEach(btn => btn.remove());
+            const citySet = new Set(photos.map(p => p.city));
+            const cityList = Array.from(citySet).sort();
+            cityList.forEach(city => {
+                const btn = document.createElement('button');
+                btn.className = 'city-btn';
+                btn.dataset.city = city;
+                btn.textContent = city;
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    showPage('works');
+                    selectedCountry = null;
+                    selectedCity = city;
+                    renderWorks();
+                });
+                filter.appendChild(btn);
+            });
+            allBtn.addEventListener('click', function() {
+                document.querySelectorAll('.city-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                showPage('works');
+                selectedCountry = null;
+                selectedCity = null;
+                renderWorks();
+            });
+        }
+
+        // ================================================================
+        //  启动
+        // ================================================================
+        async function init() {
+            const cloudOk = await fetchFromCloud();
+            if (!cloudOk) {
+                loadAllData();
+            }
+            photos = loadPhotos() || [];
+            countries = loadCountries() || [];
+            cities = loadCities() || [];
+            if (photos.length === 0) {
+                photos = DEFAULT_PHOTOS.slice();
+                const cats = rebuildCategories(photos);
+                countries = cats.countries;
+                cities = cats.cities;
+                savePhotos(photos);
+                saveCountries(countries);
+                saveCities(cities);
+            }
+            renderCityButtons();
+            renderWorks();
+            showAuth();
+            setTimeout(initCarousel, 300);
+            console.log('✨ kk\'s Photography 已加载 (Supabase + Cloudinary)');
+            console.log('📸 照片总数:', photos.length);
+            console.log('🔒 管理密码:', ADMIN_PASSWORD);
+        }
+
+        init();
+
+        window.addEventListener('resize', () => {
+            if (document.getElementById('page-home').classList.contains('active')) {
+                initCarousel();
+            }
+        });
+    </script>
+</body>
+</html>
